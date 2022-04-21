@@ -6,7 +6,16 @@
 USERNAME=$(whoami)
 
 # export DBus session address
-export $(cat /run/user/$(id -u)/dbus-session)
+if [ -f /run/user/$(id -u)/dbus-session ]; then
+   export $(cat /run/user/$(id -u)/dbus-session)
+else
+   if [ -f /run/user/$(id -u)/bus ]; then
+      export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+   else
+      echo "Could not find DBus session address."
+      exit 1
+   fi
+fi
 
 # Check if Waydroid is installed.
 if [ $(LANG=C type waydroid 2>/dev/null | wc -l) = 1 ]; then
