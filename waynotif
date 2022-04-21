@@ -32,8 +32,8 @@ fi
 
 # Check whether or not Waydroid or even started in the first place.
 if waydroid status | grep STOPPED; then
-   exit 1
    echo "Waydroid is not running"
+   exit 1
 fi
 
 # Check if waynotif cache directory exists.
@@ -158,10 +158,21 @@ if [ -f $HOME/.cache/waynotif/notifications/ran ]; then
       GDBus_CommonName2_2=$(cat $HOME/.cache/waynotif/notifications2/commonname_clean_2)
    fi
 
-   string_AppName="Waydroid $GDBus_CommonName1_1"
-   string_AppNum="You have $GDBus_Seperate1_1 notification(s)"
-   string_AppName2="Waydroid $GDBus_CommonName2_1"
-   string_AppNum2="You have $GDBus_Seperate2_1 notification(s)"
+   if [ -z "$GDBus_CommonName1_1" ]; then
+      string_AppName="Waydroid $GDBus_CommonName1_1"
+   fi
+
+   if [ -z "$GDBus_Seperate1_1" ]; then
+      string_AppNum="You have $GDBus_Seperate1_1 notification(s)"
+   fi
+
+   if [ -z "$GDBus_CommonName2_1" ]; then
+      string_AppName2="Waydroid $GDBus_CommonName2_1"
+   fi
+
+   if [ -z "$GDBus_Seperate2_1" ]; then
+      string_AppNum2="You have $GDBus_Seperate2_1 notification(s)"
+   fi
 
    echo "ran up"
 
@@ -316,10 +327,21 @@ else
             GDBus_Seperate2_1=$(cat $HOME/.cache/waynotif/notifications/commonname_clean_2)
          fi
 
-         string_AppName="Waydroid $GDBus_CommonName1_2"
-         string_AppNum="You have $GDBus_Seperate1_2 notification(s)"
-	 string_AppName2="Waydroid $GDBus_CommonName2_2"
-	 string_AppNum2="You have $GDBus_Seperate2_2 notification(s)"
+         if [ -z "$GDBus_CommonName1_2" ]; then
+            string_AppName="Waydroid $GDBus_CommonName1_2"
+         fi
+
+         if [ -z "$GDBus_Seperate1_2" ]; then
+            string_AppNum="You have $GDBus_Seperate1_2 notification(s)"
+         fi
+
+         if [ -z "$GDBus_CommonName2_2" ]; then
+            string_AppName2="Waydroid $GDBus_CommonName2_2"
+         fi
+
+         if [ -z "$GDBus_Seperate2_2" ]; then
+            string_AppNum2="You have $GDBus_Seperate2_2 notification(s)"
+         fi
 
 	 echo "ran down"
 
