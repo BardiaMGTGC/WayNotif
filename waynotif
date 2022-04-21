@@ -43,7 +43,7 @@ if [ ! -d $HOME/.cache/waynotif/notifications/ ] || [ ! -d $HOME/.cache/waynotif
    touch $HOME/.cache/waynotif/notifications/commonname_clean_2
    touch $HOME/.cache/waynotif/notifications/notif_seperate-1
    touch $HOME/.cache/waynotif/notifications/notif_seperate-2
-   touch $HOME/.cache/waynotif/notifications2/first_run
+   touch $HOME/.cache/waynotif/first_run
 fi
 
 # Check if cronjob is set in place.
@@ -65,7 +65,7 @@ if [ -f $HOME/.cache/waynotif/notifications/ran ]; then
    echo dumpsys notification | sudo waydroid shell | egrep NotificationRecord | awk -F\| '{print $2}' > $HOME/.cache/waynotif/notifications/initial_notifications
    int=1
    rm $HOME/.cache/waynotif/notifications/commonname -f
-   rm $HOME/.cache/waynotif/notifications/android_process -f
+   rm $HOME/.cache/waynotif/android_process -f
 
    # Run a loop to convert package name to common name
    while IFS= read -r line; do
@@ -74,10 +74,10 @@ if [ -f $HOME/.cache/waynotif/notifications/ran ]; then
 
 	# This if condition checks for a notification from android system which breaks the script so it fixes it here.
         if [ "$NAME" == "android" ]; then
-	   touch $HOME/.cache/waynotif/notifications/android_process
+	   touch $HOME/.cache/waynotif/android_process
            true
         else
-           waydroid app list | grep -B 1 $name | grep -w 'Name' | cut -c 7- >> $HOME/.cache/waynotif/notifications/commonname
+           waydroid app list | grep -B 1 $NAME | grep -w 'Name' | cut -c 7- >> $HOME/.cache/waynotif/notifications/commonname
         fi
 
         int=$((int+1))
@@ -96,73 +96,87 @@ if [ -f $HOME/.cache/waynotif/notifications/ran ]; then
 
    int2=1
 
+   rm $HOME/.cache/waynotif/notifications/notif_seperate_* -f
+   rm $HOME/.cache/waynotif/notifications/commonname_clean_* -f
    # Put Number of notifications in seperate file so that we can use them while creating the notification popup.
    while IFS= read -r line; do
-
-        echo $line > $HOME/.cache/waynotif/notifications/notif_seperate-$int2
+        echo $line > $HOME/.cache/waynotif/notifications/notif_seperate_$int2
         int2=$((int2+1))
-
    done < $HOME/.cache/waynotif/notifications/commonname_notif_number
 
    int3=1
 
    # Seperate common name of notification in seperate files that we can use them while creating the notification popup.
    while IFS= read -r line; do
-
         echo $line > $HOME/.cache/waynotif/notifications/commonname_clean_$int3
         int3=$((int3+1))
-
    done < $HOME/.cache/waynotif/notifications/commonname_clean
 
    # Ready up all variables for before doing our main checks.
-   GDBus_Num=$(cat $HOME/.cache/waynotif/notifications/notif_seperate-1)
+   if [ -f $HOME/.cache/waynotif/notifications/notif_seperate_1 ]; then
+      GDBus_Seperate1_1=$(cat $HOME/.cache/waynotif/notifications/notif_seperate_1)
+   fi
 
-   GDBus_Name=$(cat $HOME/.cache/waynotif/notifications/commonname_clean_1)
+   if [ -f $HOME/.cache/waynotif/notifications2/notif_seperate_1 ]; then
+      GDBus_Seperate1_2=$(cat $HOME/.cache/waynotif/notifications2/notif_seperate_1)
+   fi
 
-   GDBus_Num2=$(cat $HOME/.cache/waynotif/notifications/notif_seperate-2)
+   if [ -f $HOME/.cache/waynotif/notifications/notif_seperate_2 ]; then
+      GDBus_Seperate2_1=$(cat $HOME/.cache/waynotif/notifications/notif_seperate_2)
+   fi
 
-   GDBus_Name2=$(cat $HOME/.cache/waynotif/notifications/commonname_clean_2)
+   if [ -f $HOME/.cache/waynotif/notifications2/notif_seperate_2 ]; then
+      GDBus_Seperate2_2=$(cat $HOME/.cache/waynotif/notifications2/notif_seperate_2)
+   fi
 
-   string_AppName="Waydroid $GDBus_Name"
+   if [ -f $HOME/.cache/waynotif/notifications/commonname_clean_1 ]; then
+      GDBus_CommonName1_1=$(cat $HOME/.cache/waynotif/notifications/commonname_clean_1)
+   fi
 
-   string_AppNum="You have $GDBus_Num notification(s)"
+   if [ -f $HOME/.cache/waynotif/notifications2/commonname_clean_1 ]; then
+      GDBus_CommonName1_1=$(cat $HOME/.cache/waynotif/notifications2/commonname_clean_1)
+   fi
 
-   string_AppName2="Waydroid $GDBus_Name2"
+   if [ -f $HOME/.cache/waynotif/notifications2/commonname_clean_1 ]; then
+      GDBus_CommonName1_2=$(cat $HOME/.cache/waynotif/notifications2/commonname_clean_1)
+   fi
 
-   string_AppNum2="You have $GDBus_Num2 notification(s)"
+   if [ -f $HOME/.cache/waynotif/notifications/commonname_clean_2 ]; then
+      GDBus_CommonName2_1=$(cat $HOME/.cache/waynotif/notifications/commonname_clean_2)
+   fi
 
-   GDBus_CommonName1=$(cat $HOME/.cache/waynotif/notifications/commonname_clean_1)
+   if [ -f $HOME/.cache/waynotif/notifications2/commonname_clean_2 ]; then
+      GDBus_CommonName2_2=$(cat $HOME/.cache/waynotif/notifications2/commonname_clean_2)
+   fi
 
-   GDBus_CommonName2=$(cat $HOME/.cache/waynotif/notifications2/commonname_clean_1)
-
-   GDBus_compare=$(cat $HOME/.cache/waynotif/notifications2/notif_seperate-1)
+   string_AppName="Waydroid $GDBus_CommonName1_1"
+   string_AppNum="You have $GDBus_Seperate1_1 notification(s)"
+   string_AppName2="Waydroid $GDBus_CommonName2_1"
+   string_AppNum2="You have $GDBus_Seperate2_1 notification(s)"
 
    echo "ran up"
 
-   if [ "$GDBus_Num" == "$GDBus_compare" ] && [ "$GDBus_CommonName1" == "$GDBus_CommonName2" ]; then
-      echo "No new notification(s) up"
+   # First notification test.
+   if [ "$GDBus_Seperate1_1" == "$GDBus_Seperate1_2" ] && [ "$GDBus_CommonName1_1" == "$GDBus_CommonName1_2" ]; then
+      echo "No new notification(s) up notif1"
    else
-
-      if [ "$GDBus_Num" != "$GDBus_compare" ] && [ "$GDBus_CommonName1" == "$GDBus_CommonName2" ]; then
-	 echo "up num not same name same"
+      if [ "$GDBus_Seperate1_1" != "$GDBus_Seperate1_2" ] && [ "$GDBus_CommonName1_1" == "$GDBus_CommonName1_2" ]; then
+	 echo "up num not same name same notif1"
          gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName" "$string_AppNum" "[]" '{}' 5000
       else
-
-	 if [ "$GDBus_Num" == "$GDBus_compare" ] && [ "$GDBus_CommonName1" != "$GDBus_CommonName2" ]; then
-	    echo "up num same name not same"
+	 if [ "$GDBus_Seperate1_1" == "$GDBus_Seperate1_2" ] && [ "$GDBus_CommonName1_1" != "$GDBus_CommonName1_2" ]; then
+	    echo "up num same name not same notif1"
 	    gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName" "$string_AppNum" "[]" '{}' 5000
 	 else
-
-            if [ "$GDBus_Num" != "$GDBus_compare" ] && [ "$GDBus_CommonName1" != "$GDBus_CommonName2" ]; then
-	       echo "up num not same app name not same"
+            if [ "$GDBus_Seperate1_1" != "$GDBus_Seperate1_2" ] && [ "$GDBus_CommonName1_1" != "$GDBus_CommonName1_2" ]; then
+	       echo "up num not same app name not same notif1"
                 gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName2" "$string_AppNum2" "[]" '{}' 5000
 	    else
-
-	       if [ -f $HOME/.cache/waynotif/notifications/android_process ]; then
+	       if [ -f $HOME/.cache/waynotif/android_process ]; then
 		  echo "up android process"
 	           gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName2" "$string_AppNum2" "[]" '{}' 5000
 	       else
-	          echo "No notification(s) empty up"
+	          echo "No notification(s) empty up notif1"
 	       fi
 
             fi
@@ -173,134 +187,190 @@ if [ -f $HOME/.cache/waynotif/notifications/ran ]; then
 
    fi
 
+   # Sleep to make sure two notifications don't overlap.
+   sleep 6s
+
+   # Second notification test.
+   if [ "$GDBus_Seperate2_1" == "$GDBus_Seperate2_2" ] && [ "$GDBus_CommonName2_1" == "$GDBus_CommonName2_2" ]; then
+      echo "No new notification(s) up notif2"
+   else
+      if [ "$GDBus_Seperate2_1" != "$GDBus_Seperate2_2" ] && [ "$GDBus_CommonName2_1" == "$GDBus_CommonName2_2" ]; then
+	 echo "up num not same name same notif2"
+         gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName2" "$string_AppNum2" "[]" '{}' 5000
+      else
+	 if [ "$GDBus_Seperate2_1" == "$GDBus_Seperate2_2" ] && [ "$GDBus_CommonName2_1" != "$GDBus_CommonName2_2" ]; then
+	    echo "up num same name not same notif2"
+	    gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName2" "$string_AppNum2" "[]" '{}' 5000
+	 else
+	    echo "No notification(s) empty up notif2"
+         fi
+
+      fi
+
+   fi
+
    rm $HOME/.cache/waynotif/notifications/ran -f
 
 else
 
-      notifs=$(echo dumpsys notification | sudo waydroid shell | egrep NotificationRecord | awk -F\| '{print $2}')
-      old_notifs=$(cat $HOME/.cache/waynotif/notifications2/initial_notifications)
+      NOTIFS=$(echo dumpsys notification | sudo waydroid shell | egrep NotificationRecord | awk -F\| '{print $2}')
+      OLD_NOTIFS=$(cat $HOME/.cache/waynotif/notifications2/initial_notifications)
 
       # Compare whether or not our old notifications and new ones are the same to avoid duplicates.
 
-      if [ "$notifs" == "$old_notifs" ]; then
+      if [ "$OLD_NOTIFS" == "$NOTIFS" ]; then
          echo "No new notification(s) oldnotif notif"
+	 exit 1
       else
 
-	 # The rest of this is a slightly editted version of above to make sure everything runs smoothly.
+	 # Get notifications from dumpsys (not 100% accurate).
          echo dumpsys notification | sudo waydroid shell | egrep NotificationRecord | awk -F\| '{print $2}' > $HOME/.cache/waynotif/notifications2/initial_notifications
          int=1
 	 rm $HOME/.cache/waynotif/notifications2/commonname -f
-	 rm $HOME/.cache/waynotif/notifications2/android_process -f
+	 rm $HOME/.cache/waynotif/android_process -f
 
+ 	 # Run a loop to convert package name to common name
          while IFS= read -r line; do
 
-              name=$(echo $line)
-	      if [ "$name" == "android" ]; then
-		 touch $HOME/.cache/waynotif/notifications2/android_process
+              NAME=$(echo $line)
+
+	      # This if condition checks for a notification from android system which breaks the script so it fixes it here.
+	      if [ "$NAME" == "android" ]; then
+		 touch $HOME/.cache/waynotif/android_process
 		 true
 	      else
-                 waydroid app list | grep -B 1 $name | grep -w 'Name' | cut -c 7- >> $HOME/.cache/waynotif/notifications2/commonname
+                 waydroid app list | grep -B 1 $NAME | grep -w 'Name' | cut -c 7- >> $HOME/.cache/waynotif/notifications2/commonname
               fi
 
               int=$((int+1))
 
          done < $HOME/.cache/waynotif/notifications2/initial_notifications
 
-
+	 # Check if there are no notifications (commonname file is made in last loop).
 	 if [ ! -f $HOME/.cache/waynotif/notifications2/commonname ]; then
 	    echo "No notifications available. down"
 	    exit 1
 	 fi
 
-
+	 # Clean the files and make them ready for next stage.
          awk '!seen[$0]++' $HOME/.cache/waynotif/notifications2/commonname > $HOME/.cache/waynotif/notifications2/commonname_clean
          cat $HOME/.cache/waynotif/notifications2/commonname | uniq --count | cut -c7 - > $HOME/.cache/waynotif/notifications2/commonname_notif_number
 
          int2=1
 
-
+	 rm $HOME/.cache/waynotif/notifications2/notif_seperate_* -f
+	 rm $HOME/.cache/waynotif/notifications2/commonname_clean_* -f
+	 # Put Number of notifications in seperate file so that we can use them while creating the notification popup.
          while IFS= read -r line; do
-
-              echo $line > $HOME/.cache/waynotif/notifications2/notif_seperate-$int2
+              echo $line > $HOME/.cache/waynotif/notifications2/notif_seperate_$int2
               int2=$((int2+1))
-
          done < $HOME/.cache/waynotif/notifications2/commonname_notif_number
-
 
          int3=1
 
-
+	 # Seperate common name of notification in seperate files that we can use them while creating the notification popup.
          while IFS= read -r line; do
-
               echo $line > $HOME/.cache/waynotif/notifications2/commonname_clean_$int3
               int3=$((int3+1))
-
          done < $HOME/.cache/waynotif/notifications2/commonname_clean
 
+	 # Ready up all variables for before doing our main checks.
+	 if [ -f $HOME/.cache/waynotif/notifications2/commonname_clean_1 ]; then
+	    GDBus_CommonName1_2=$(cat $HOME/.cache/waynotif/notifications2/commonname_clean_1)
+ 	 fi
 
-         GDBus_Num=$(cat $HOME/.cache/waynotif/notifications2/notif_seperate-1)
+         if [ -f $HOME/.cache/waynotif/notifications/commonname_clean_1 ]; then
+            GDBus_CommonName1_1=$(cat $HOME/.cache/waynotif/notifications/commonname_clean_1)
+         fi
 
-         GDBus_Name=$(cat $HOME/.cache/waynotif/notifications2/commonname_clean_1)
+         if [ -f $HOME/.cache/waynotif/notifications2/commonname_clean_2 ]; then
+            GDBus_CommonName2_2=$(cat $HOME/.cache/waynotif/notifications2/commonname_clean_2)
+         fi
 
-	 GDBus_Num2=$(cat $HOME/.cache/waynotif/notifications/notif_seperate-2)
+         if [ -f $HOME/.cache/waynotif/notifications/commonname_clean_2 ]; then
+            GDBus_CommonName2_1=$(cat $HOME/.cache/waynotif/notifications/commonname_clean_2)
+         fi
 
-	 GDBus_Name2=$(cat $HOME/.cache/waynotif/notifications/commonname_clean_2)
+         if [ -f $HOME/.cache/waynotif/notifications2/notif_seperate_1 ]; then
+            GDBus_Seperate1_2=$(cat $HOME/.cache/waynotif/notifications2/notif_seperate_1)
+         fi
 
-         string_AppName="Waydroid $GDBus_Name"
+         if [ -f $HOME/.cache/waynotif/notifications/notif_seperate_1 ]; then
+            GDBus_Seperate1_1=$(cat $HOME/.cache/waynotif/notifications/notif_seperate_1)
+         fi
 
-         string_AppNum="You have $GDBus_Num notification(s)"
+         if [ -f $HOME/.cache/waynotif/notifications2/notif_seperate_2 ]; then
+            GDBus_Seperate2_2=$(cat $HOME/.cache/waynotif/notifications2/notif_seperate_2)
+         fi
 
-	 string_AppName2="Waydroid $GDBus_Name2"
+         if [ -f $HOME/.cache/waynotif/notifications/commonname_clean_2 ]; then
+            GDBus_Seperate2_1=$(cat $HOME/.cache/waynotif/notifications/commonname_clean_2)
+         fi
 
-	 string_AppNum2="You have $GDBus_Num2 notification(s)"
-
-	 GDBus_CommonName1=$(cat $HOME/.cache/waynotif/notifications2/commonname_clean_1)
-
-	 GDBus_CommonName2=$(cat $HOME/.cache/waynotif/notifications/commonname_clean_1)
-
-	 GDBus_compare=$(cat $HOME/.cache/waynotif/notifications/notif_seperate-1)
+         string_AppName="Waydroid $GDBus_CommonName1_2"
+         string_AppNum="You have $GDBus_Seperate1_2 notification(s)"
+	 string_AppName2="Waydroid $GDBus_CommonName2_2"
+	 string_AppNum2="You have $GDBus_Seperate2_2 notification(s)"
 
 	 echo "ran down"
 
 	 # The first fix.
-	 if [ -f $HOME/.cache/waynotif/notifications2/first_run ]; then
-
-	     gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName" "$string_AppNum" "[]" '{}' 5000
+	 if [ -f $HOME/.cache/waynotif/first_run ]; then
+	    gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName" "$string_AppNum" "[]" '{}' 5000
 	    echo "first run notif down"
-	    rm $HOME/.cache/waynotif/notifications2/first_run -f
+	    rm $HOME/.cache/waynotif/first_run -f
 	    exit 1
-
 	 fi
 
 	 touch $HOME/.cache/waynotif/notifications/ran
 
-	 if [ "$GDBus_Num" == "$GDBus_compare" ] && [ "$GDBus_CommonName1" == "$GDBus_CommonName2" ]; then
-            echo "No new notification(s) down"
+	 # First notification test.
+	 if [ "$GDBus_Seperate1_2" == "$GDBus_Seperate1_1" ] && [ "$GDBus_CommonName1_2" == "$GDBus_CommonName1_1" ]; then
+            echo "No new notification(s) down notif1"
          else
-
-            if [ "$GDBus_Num" != "$GDBus_compare" ] && [ "$GDBus_CommonName1" == "$GDBus_CommonName2" ]; then
-	       echo "down num not same name same"
+            if [ "$GDBus_Seperate1_2" != "$GDBus_Seperate1_1" ] && [ "$GDBus_CommonName1_2" == "$GDBus_CommonName1_1" ]; then
+	       echo "down num not same name same notif1"
                gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName" "$string_AppNum" "[]" '{}' 5000
             else
-	       if [ "$GDBus_Num" == "$GDBus_compare" ] && [ "$GDBus_CommonName1" != "$GDBus_CommonName2" ]; then
-		  echo "down num same name not same"
+	       if [ "$GDBus_Seperate1_2" == "$GDBus_Seperate1_1" ] && [ "$GDBus_CommonName1_2" != "$GDBus_CommonName1_1" ]; then
+		  echo "down num same name not same notif1"
 	          gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName" "$string_AppNum" "[]" '{}' 5000
 	       else
-
-                  if [ "$GDBus_Num" != "$GDBus_compare" ] && [ "$GDBus_CommonName1" != "$GDBus_CommonName2" ]; then
-		     echo "down num not same name not same"
+                  if [ "$GDBus_Seperate1_2" != "$GDBus_Seperate1_1" ] && [ "$GDBus_CommonName1_2" != "$GDBus_CommonName1_1" ]; then
+		     echo "down num not same name not same notif1"
                      gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName2" "$string_AppNum2" "[]" '{}' 5000
                   else
-
-  	             if [ -f $HOME/.cache/waynotif/notifications/android_process ]; then
+  	             if [ -f $HOME/.cache/waynotif/android_process ]; then
 		        echo "down android process"
 	                gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName2" "$string_AppNum2" "[]" '{}' 5000
 	             else
-                        echo "No notification(s) empty down"
+                        echo "No notification(s) empty down notif1"
 		     fi
 
 		  fi
 
+	       fi
+
+            fi
+
+         fi
+
+	 # Sleep to make sure two notifications don't overlap.
+	 sleep 6s
+
+	 # Second notification test.
+	 if [ "$GDBus_Seperate2_2" == "$GDBus_Seperate2_1" ] && [ "$GDBus_CommonName2_2" == "$GDBus_CommonName2_1" ]; then
+            echo "No new notification(s) down notif2"
+         else
+            if [ "$GDBus_Seperate2_2" != "$GDBus_Seperate2_1" ] && [ "$GDBus_CommonName2_2" == "$GDBus_CommonName2_1" ]; then
+	       echo "down num not same name same notif2"
+               gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName2" "$string_AppNum2" "[]" '{}' 5000
+            else
+	       if [ "$GDBus_Seperate2_2" == "$GDBus_Seperate2_1" ] && [ "$GDBus_CommonName2_2" != "$GDBus_CommonName2_1" ]; then
+		  echo "down num same name not same notif2"
+	          gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName2" "$string_AppNum2" "[]" '{}' 5000
+	       else
+                  echo "No notification(s) empty down notif2"
 	       fi
 
             fi
