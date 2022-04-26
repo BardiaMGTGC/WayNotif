@@ -8,10 +8,10 @@ USERNAME=$(whoami)
 if [ -f /run/user/$(id -u)/dbus-session ]; then
    export $(cat /run/user/$(id -u)/dbus-session)
 elif [ -f /run/user/$(id -u)/bus ]; then
-     export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
-   else
-      echo "Could not find DBus session address."
-      exit 1
+   export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+else
+   echo "Could not find DBus session address."
+   exit 1
 fi
 
 # Check if Waydroid is installed.
@@ -21,7 +21,6 @@ else
    echo "Waydroid is not installed"
    exit 1
 fi
-
 
 if [ ! -f /var/lib/waydroid/images/system.img ]; then
    echo "Waydroid is not initialized. Run waydroid init."
@@ -61,7 +60,7 @@ else
    (crontab -u "$USERNAME" -l; echo "* * * * * $HOME/waynotif") | crontab -u "$USERNAME" -
    (crontab -u "$USERNAME" -l; echo "* * * * * sleep 30; $HOME/waynotif") | crontab -u "$USERNAME" -
    echo "Cronjob has been added"
-   if [ "$whoami" == "phablet" ]; then
+   if [ "$USERNAME" == "phablet" ]; then
       sudo mount -o remount,ro /
    fi
 fi
@@ -69,7 +68,7 @@ fi
 
 if [ -f $HOME/.cache/waynotif/notifications/ran ]; then
    # Get notifications from dumpsys (not 100% accurate).
-   echo dumpsys notification | sudo waydroid shell | egrep NotificationRecord | awk -F\| '{print $2}' > $HOME/.cache/waynotif/notifications/initial_notifications
+   echo dumpsys notification | sudo waydroid shell | egrep NotificationRecord | awk -F\| '{print $2}' | grep -v -e '^$' > $HOME/.cache/waynotif/notifications/initial_notifications
    int=1
    rm $HOME/.cache/waynotif/notifications/commonname -f
    rm $HOME/.cache/waynotif/android_process -f
@@ -178,10 +177,20 @@ if [ -f $HOME/.cache/waynotif/notifications/ran ]; then
 
    if [ ! -z "$GDBus_PkgName1_1" ]; then
       GDBus_Preview1_1=$(echo dumpsys notification | sudo waydroid shell | grep PendingIntent | awk '!seen[$1]++' | grep -v "contentIntent" | grep -v "deleteIntent" | sed '0,/"GDBus_PkgName1_1"/b;/"$GDBus_PkgName1_1"/d' | cut -d '"' -f 2 | sed -n '1p')
+      echo $GDBus_Preview1_1 > $HOME/.cache/waynotif/notifications/preview
    fi
 
    if [ ! -z "$GDBus_PkgName2_1" ]; then
       GDBus_Preview2_1=$(echo dumpsys notification | sudo waydroid shell | grep PendingIntent | awk '!seen[$1]++' | grep -v "contentIntent" | grep -v "deleteIntent" | sed '0,/"GDBus_PkgName2_1"/b;/"$GDBus_PkgName2_1"/d' | cut -d '"' -f 2 | sed -n '1p')
+      echo $GDBus_Preview2_1 > $HOME/.cache/waynotif/notifications/preview2
+   fi
+
+   if [ ! -z "$GDBus_Preview1_1" ]; then
+      GDBus_Preview1_2=$(echo $HOME/.cache/waynotif/notifications2/preview)
+   fi
+
+   if [ ! -z "$GDBus_Preview2_1" ]; then
+      GDBus_Preview2_2=$(echo $HOME/.cache/waynotif/notifications2/preview2)
    fi
 
    if [ ! -z "$GDBus_CommonName1_1" ]; then
@@ -190,8 +199,16 @@ if [ -f $HOME/.cache/waynotif/notifications/ran ]; then
 
    if [ ! -z "$GDBus_Seperate1_1" ] && [ ! -z "$GDBus_PkgName1_1" ]; then
       string_AppNum="You have $GDBus_Seperate1_1 notification(s) $GDBus_Preview1_1"
+      echo $string_AppNum > $HOME/.cache/waynotif/notifications/string
+      GDBus_string1_1=$(cat $HOME/.cache/waynotif/notifications/string)
    elif [ ! -z "$GDBus_Seperate1_1" ] && [ -z "$GDBus_PkgName1_1" ]; then
-        string_AppNum="You have $GDBus_Seperate1_1 notification(s)"
+      string_AppNum="You have $GDBus_Seperate1_1 notification(s)"
+      echo $string_AppNum > $HOME/.cache/waynotif/notifications/string
+      GDBus_string1_1=$(cat $HOME/.cache/waynotif/notifications/string)
+   fi
+
+   if [ -f $HOME/.cache/waynotif/notifications2/string ]; then
+      GDBus_string1_2=$(cat $HOME/.cache/waynotif/notifications2/string)
    fi
 
    if [ ! -z "$GDBus_CommonName2_1" ]; then
@@ -200,63 +217,114 @@ if [ -f $HOME/.cache/waynotif/notifications/ran ]; then
 
    if [ ! -z "$GDBus_Seperate2_1" ] && [ ! -z "$GDBus_PkgName2_1" ]; then
       string_AppNum2="You have $GDBus_Seperate2_1 notification(s) $GDBus_Preview2_1"
+      echo $string_AppNum2 > $HOME/.cache/waynotif/notifications/string2
+      GDBus_string2_1=$(cat $HOME/.cache/waynotif/notifications/string2)
    elif [ ! -z "$GDBus_Seperate2_1" ] && [ -z "$GDBus_PkgName2_1" ]; then
-        string_AppNum2="You have $GDBus_Seperate2_1 notification(s)"
+      string_AppNum2="You have $GDBus_Seperate2_1 notification(s)"
+      echo $string_AppNum2 > $HOME/.cache/waynotif/notifications/string2
+      GDBus_string2_1=$(cat $HOME/.cache/waynotif/notifications/string2)
+   fi
+
+   if [ -f $HOME/.cache/waynotif/notifications2/string2 ]; then
+      GDBus_string2_2=$(cat $HOME/.cache/waynotif/notifications2/string2)
    fi
 
    echo "ran up"
 
    # First notification test.
-   if [ "$GDBus_Seperate1_1" == "$GDBus_Seperate1_2" ] && [ "$GDBus_CommonName1_1" == "$GDBus_CommonName1_2" ]; then
+   if [ "$GDBus_Seperate1_1" == "$GDBus_Seperate1_2" ] && [ "$GDBus_CommonName1_1" == "$GDBus_CommonName1_2" ] && [ "$GDBus_Preview1_1" == "$GDBus_Preview1_2" ] && [ ! -z "$GDBus_Preview1_1" ]; then
       echo "No new notification(s) up notif1"
+      Notif1="false"
+   elif [ "$GDBus_Seperate1_1" != "$GDBus_Seperate1_2" ] && [ "$GDBus_CommonName1_1" == "$GDBus_CommonName1_2" ] && [ "$GDBus_Preview1_1" == "GDBus_Preview1_2" ] && [ ! -z "$GDBus_Preview1_1" ]; then
+      echo "up num not same name same preview same notif1"
+      gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName" "$string_AppNum" "[]" '{}' 5000
+   elif [ "$GDBus_Seperate1_1" != "$GDBus_Seperate1_2" ] && [ "$GDBus_CommonName1_1" == "$GDBus_CommonName1_2" ] && [ "$GDBus_Preview1_1" != "GDBus_Preview1_2" ] && [ ! -z "$GDBus_Preview1_1" ]; then
+      echo "up num not same name same preview not same notif1"
+      gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName" "$string_AppNum" "[]" '{}' 5000
+   elif [ "$GDBus_Seperate1_1" == "$GDBus_Seperate1_2" ] && [ "$GDBus_CommonName1_1" == "$GDBus_CommonName1_2" ] && [ "$GDBus_Preview1_1" != "GDBus_Preview1_2" ] && [ ! -z "$GDBus_Preview1_1" ]; then
+      echo "up num same name same preview not same notif1"
+
+      # Check for a duplicate and prevent it.
+      if [ "$GDBus_string1_2" == "$GDBus_string1_1" ]; then
+         Notif1="false"
+      else
+         gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName" "$string_AppNum" "[]" '{}' 5000
+      fi
+
+   elif [ "$GDBus_Seperate1_1" != "$GDBus_Seperate1_2" ] && [ "$GDBus_CommonName1_1" == "$GDBus_CommonName1_2" ] && [ "$GDBus_Preview1_1" == "GDBus_Preview1_2" ] && [ ! -z "$GDBus_Preview1_1" ]; then
+      echo "up num not same name same preview same notif1"
+      gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName" "$string_AppNum" "[]" '{}' 5000
    elif [ "$GDBus_Seperate1_1" != "$GDBus_Seperate1_2" ] && [ "$GDBus_CommonName1_1" == "$GDBus_CommonName1_2" ]; then
-	echo "up num not same name same notif1"
-        gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName" "$string_AppNum" "[]" '{}' 5000
-      elif [ "$GDBus_Seperate1_1" == "$GDBus_Seperate1_2" ] && [ "$GDBus_CommonName1_1" != "$GDBus_CommonName1_2" ]; then
-	   echo "up num same name not same notif1"
-	   gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName" "$string_AppNum" "[]" '{}' 5000
-	 elif [ "$GDBus_Seperate1_1" != "$GDBus_Seperate1_2" ] && [ "$GDBus_CommonName1_1" != "$GDBus_CommonName1_2" ]; then
-	      echo "up num not same app name not same notif1"
-              gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName2" "$string_AppNum2" "[]" '{}' 5000
-	    elif [ -f $HOME/.cache/waynotif/android_process ]; then
-		 echo "up android process"
-	         gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName2" "$string_AppNum2" "[]" '{}' 5000
-	       else
-	          echo "No notification(s) empty up notif1"
+      echo "up num not same name same notif1"
+      gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName" "$string_AppNum" "[]" '{}' 5000
+   elif [ "$GDBus_Seperate1_1" == "$GDBus_Seperate1_2" ] && [ "$GDBus_CommonName1_1" != "$GDBus_CommonName1_2" ]; then
+      echo "up num same name not same notif1"
+      gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName" "$string_AppNum" "[]" '{}' 5000
+   elif [ -f $HOME/.cache/waynotif/android_process ]; then
+      echo "up android process"
+      gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName2" "$string_AppNum2" "[]" '{}' 5000
+   else
+      echo "No notification(s) empty up notif1"
+      Notif1="false"
    fi
 
-   # Sleep to make sure two notifications don't overlap.
-   sleep 6s
+   # Check if first notification is up and if not sleep to make sure two notifications don't overlap.
+   if [ "$Notif1" == "false" ]; then
+      true
+   else
+      sleep 6s
+   fi
 
    # Second notification test.
-   if [ "$GDBus_Seperate2_1" == "$GDBus_Seperate2_2" ] && [ "$GDBus_CommonName2_1" == "$GDBus_CommonName2_2" ]; then
+   if [ "$GDBus_Seperate2_1" == "$GDBus_Seperate2_2" ] && [ "$GDBus_CommonName2_1" == "$GDBus_CommonName2_2" ] && [ "$GBus_Preview2_1" == "$GDBus_Preview2_2" ] && [ ! -z "$GDBus_Preview2_1" ] && [ ! -z "$GDBus_CommonName2_1" ]; then
       echo "No new notification(s) up notif2"
-   elif [ "$GDBus_Seperate2_1" != "$GDBus_Seperate2_2" ] && [ "$GDBus_CommonName2_1" == "$GDBus_CommonName2_2" ]; then
-	echo "up num not same name same notif2"
-        gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName2" "$string_AppNum2" "[]" '{}' 5000
-      elif [ "$GDBus_Seperate2_1" == "$GDBus_Seperate2_2" ] && [ "$GDBus_CommonName2_1" != "$GDBus_CommonName2_2" ]; then
-	   echo "up num same name not same notif2"
-	   gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName2" "$string_AppNum2" "[]" '{}' 5000
-	 else
-	    echo "No notification(s) empty up notif2"
+   elif [ "$GDBus_Seperate2_1" != "$GDBus_Seperate2_2" ] && [ "$GDBus_CommonName2_1" == "$GDBus_CommonName2_2" ] && [ "$GDBus_Preview2_1" == "GDBus_Preview2_2" ] && [ ! -z "$GDBus_Preview2_1" ] && [ ! -z "$GDBus_CommonName2_1" ]; then
+      echo "up num not same name same preview same notif2"
+      gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName2" "$string_AppNum2" "[]" '{}' 5000
+   elif [ "$GDBus_Seperate2_1" == "$GDBus_Seperate2_2" ] && [ "$GDBus_CommonName2_1" == "$GDBus_CommonName2_2" ] && [ "$GDBus_Preview2_1" != "GDBus_Preview2_2" ] && [ ! -z "$GDBus_Preview2_1" ] && [ ! -z "$GDBus_CommonName2_1" ]; then
+      echo "up num same name same preview not same notif2"
+      gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName2" "$string_AppNum2" "[]" '{}' 5000
+   elif [ "$GDBus_Seperate2_1" != "$GDBus_Seperate2_2" ] && [ "$GDBus_CommonName2_1" == "$GDBus_CommonName2_2" ] && [ "$GDBus_Preview2_1" != "GDBus_Preview2_2" ] && [ ! -z "$GDBus_Preview2_1" ] && [ ! -z "$GDBus_CommonName2_1" ]; then
+      echo "up num not same name same preview not same notif2"
+      gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName2" "$string_AppNum2" "[]" '{}' 5000
+   elif [ "$GDBus_Seperate2_1" == "$GDBus_Seperate2_2" ] && [ "$GDBus_CommonName2_1" == "$GDBus_CommonName2_2" ] && [ "$GDBus_Preview2_1" != "GDBus_Preview2_2" ] && [ ! -z "$GDBus_Preview2_1" ]; then
+      echo "up num same name same preview not same notif2"
+
+      # Check for a duplicate and prevent it.
+      if [ "$GDBus_string2_2" == "$GDBus_string2_1" ]; then
+         true
+      else
+         gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName2" "$string_AppNum2" "[]" '{}' 5000
+      fi
+
+   elif [ "$GDBus_Seperate2_1" != "$GDBus_Seperate2_2" ] && [ "$GDBus_CommonName2_1" == "$GDBus_CommonName2_2" ] && [ ! -z "$GDBus_CommonName2_1" ]; then
+      echo "up num not same name same notif2"
+      gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName2" "$string_AppNum2" "[]" '{}' 5000
+   elif [ "$GDBus_Seperate2_1" == "$GDBus_Seperate2_2" ] && [ "$GDBus_CommonName2_1" != "$GDBus_CommonName2_2" ] && [ ! -z "$GDBus_CommonName2_1" ]; then
+      echo "up num same name not same notif2"
+      gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName2" "$string_AppNum2" "[]" '{}' 5000
+   else
+      echo "No notification(s) empty up notif2"
    fi
 
    rm $HOME/.cache/waynotif/notifications/ran -f
 
 else
 
-      NOTIFS=$(echo dumpsys notification | sudo waydroid shell | egrep NotificationRecord | awk -F\| '{print $2}')
+      NOTIFS=$(echo dumpsys notification | sudo waydroid shell | egrep NotificationRecord | awk -F\| '{print $2}' | grep -v -e '^$' )
       OLD_NOTIFS=$(cat $HOME/.cache/waynotif/notifications2/initial_notifications)
+      STRING=$(cat $HOME/.cache/waynotif/notifications/string)
+      STRING2=$(cat $HOME/.cache/waynotif/notifications2/string)
 
       # Compare whether or not our old notifications and new ones are the same to avoid duplicates.
 
-      if [ "$OLD_NOTIFS" == "$NOTIFS" ]; then
+      if [ "$OLD_NOTIFS" == "$NOTIFS" ] && [ "$STRING" == "$STRING2" ]; then
          echo "No new notification(s) oldnotif notif"
 	 exit 1
       else
 
 	 # Get notifications from dumpsys (not 100% accurate).
-         echo dumpsys notification | sudo waydroid shell | egrep NotificationRecord | awk -F\| '{print $2}' > $HOME/.cache/waynotif/notifications2/initial_notifications
+         echo dumpsys notification | sudo waydroid shell | egrep NotificationRecord | awk -F\| '{print $2}' | grep -v -e '^$' > $HOME/.cache/waynotif/notifications2/initial_notifications
          int=1
 	 rm $HOME/.cache/waynotif/notifications2/commonname -f
 	 rm $HOME/.cache/waynotif/android_process -f
@@ -271,7 +339,6 @@ else
 	      # This if condition checks for a notification from android system which breaks the script so it fixes it here.
 	      if [ "$NAME" == "android" ]; then
 		 touch $HOME/.cache/waynotif/android_process
-		 true
 	      else
                  waydroid app list | grep -B 1 $NAME | grep -w 'Name' | cut -c 7- >> $HOME/.cache/waynotif/notifications2/commonname
               fi
@@ -366,15 +433,31 @@ else
             GDBus_Preview2_2=$(echo dumpsys notification | sudo waydroid shell | grep PendingIntent | awk '!seen[$1]++' | grep -v "contentIntent" | grep -v "deleteIntent" | sed '0,/"GDBus_PkgName2_2"/b;/"$GDBus_PkgName2_2"/d' | cut -d '"' -f 2 | sed -n '1p')
 	 fi
 
+         if [ ! -z "$GDBus_Preview1_2" ]; then
+            GDBus_Preview1_1=$(echo $HOME/.cache/waynotif/notifications/preview)
+         fi
+
+         if [ ! -z "$GDBus_Preview2_2" ]; then
+            GDBus_Preview2_1=$(echo $HOME/.cache/waynotif/notifications/preview2)
+         fi
+
          if [ ! -z "$GDBus_CommonName1_2" ]; then
             string_AppName="Waydroid $GDBus_CommonName1_2"
          fi
 
  	 if [ ! -z "$GDBus_Seperate1_2" ] && [ ! -z "$GDBus_PkgName1_2" ]; then
   	    string_AppNum="You have $GDBus_Seperate1_2 notification(s) $GDBus_Preview1_2"
+            echo $string_AppNum > $HOME/.cache/waynotif/notifications2/string
+	    GDBus_string1_2=$(cat $HOME/.cache/waynotif/notifications2/string)
 	 elif [ ! -z "$GDBus_Seperate1_2" ] && [ -z "$GDBus_PkgName1_2" ]; then
-              string_AppNum="You have $GDBus_Seperate1_2 notification(s)"
+            string_AppNum="You have $GDBus_Seperate1_2 notification(s)"
+            echo $string_AppNum > $HOME/.cache/waynotif/notifications2/string
+	    GDBus_string1_2=$(cat $HOME/.cache/waynotif/notifications2/string)
    	 fi
+
+	 if [ -f $HOME/.cache/waynotif/notifications/string ]; then
+	    GDBus_string1_1=$(cat $HOME/.cache/waynotif/notifications/string)
+	 fi
 
          if [ ! -z "$GDBus_CommonName2_2" ]; then
             string_AppName2="Waydroid $GDBus_CommonName2_2"
@@ -382,8 +465,16 @@ else
 
          if [ ! -z "$GDBus_Seperate2_2" ] && [ ! -z "$GDBus_PkgName2_2" ]; then
             string_AppNum2="You have $GDBus_Seperate2_2 notification(s) $GDBus_Preview2_2"
+            echo $string_AppNum2 > $HOME/.cache/waynotif/notifications2/string2
+	    GDBus_string2_2=$(cat $HOME/.cache/waynotif/notifications2/string2)
          elif [ ! -z "$GDBus_Seperate2_2" ] && [ -z "$GDBus_PkgName2_2" ]; then
-              string_AppNum2="You have $GDBus_Seperate2_2 notification(s)"
+            string_AppNum2="You have $GDBus_Seperate2_2 notification(s)"
+	    echo $string_AppNum2 > $HOME/.cache/waynotif/notifications2/string2
+	    GDBus_string2_2=$(cat $HOME/.cache/waynotif/notifications2/string2)
+         fi
+
+         if [ -f $HOME/.cache/waynotif/notifications/string2 ]; then
+            GDBus_string2_1=$(cat $HOME/.cache/waynotif/notifications/string2)
          fi
 
 	 echo "ran down"
@@ -399,38 +490,78 @@ else
 	 touch $HOME/.cache/waynotif/notifications/ran
 
 	 # First notification test.
-	 if [ "$GDBus_Seperate1_2" == "$GDBus_Seperate1_1" ] && [ "$GDBus_CommonName1_2" == "$GDBus_CommonName1_1" ]; then
+	 if [ "$GDBus_Seperate1_2" == "$GDBus_Seperate1_1" ] && [ "$GDBus_CommonName1_2" == "$GDBus_CommonName1_1" ] && [ "$GDBus_Preview1_2" == "GDBus_Preview1_1" ] && [ ! -z "$GDBus_Preview1_2" ]; then
             echo "No new notification(s) down notif1"
+	    Notif1="false"
+	 elif [ "$GDBus_Seperate1_2" != "$GDBus_Seperate1_1" ] && [ "$GDBus_CommonName1_2" == "$GDBus_CommonName1_1" ] && [ "$GDBus_Preview1_2" == "GDBus_Preview1_1" ] && [ ! -z "$GDBus_Preview1_2" ]; then
+            echo "down num not same name same preview same notif1"
+            gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName" "$string_AppNum" "[]" '{}' 5000
+         elif [ "$GDBus_Seperate1_2" != "$GDBus_Seperate1_1" ] && [ "$GDBus_CommonName1_2" == "$GDBus_CommonName1_1" ] && [ "$GDBus_Preview1_2" != "GDBus_Preview1_1" ] && [ ! -z "$GDBus_Preview1_2" ]; then
+            echo "down num not same name same preview not same notif1"
+            gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName" "$string_AppNum" "[]" '{}' 5000
+         elif [ "$GDBus_Seperate1_2" != "$GDBus_Seperate1_1" ] && [ "$GDBus_CommonName1_2" == "$GDBus_CommonName1_1" ] && [ "$GDBus_Preview1_2" == "GDBus_Preview1_1" ] && [ ! -z "$GDBus_Preview1_2" ]; then
+            echo "down num not same name same preview same notif1"
+            gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName" "$string_AppNum" "[]" '{}' 5000
+         elif [ "$GDBus_Seperate1_2" == "$GDBus_Seperate1_1" ] && [ "$GDBus_CommonName1_2" == "$GDBus_CommonName1_1" ] && [ "$GDBus_Preview1_2" != "GDBus_Preview1_1" ] && [ ! -z "$GDBus_Preview1_2" ]; then
+            echo "down num same name same preview not same notif1"
+
+	    # Check for a duplicate and prevent it.
+	    if [ "$GDBus_string1_2" == "$GDBus_string1_1" ]; then
+	       Notif1="false"
+	    else
+               gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName" "$string_AppNum" "[]" '{}' 5000
+            fi
+
          elif [ "$GDBus_Seperate1_2" != "$GDBus_Seperate1_1" ] && [ "$GDBus_CommonName1_2" == "$GDBus_CommonName1_1" ]; then
-	      echo "down num not same name same notif1"
-              gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName" "$string_AppNum" "[]" '{}' 5000
-            elif [ "$GDBus_Seperate1_2" == "$GDBus_Seperate1_1" ] && [ "$GDBus_CommonName1_2" != "$GDBus_CommonName1_1" ]; then
-		 echo "down num same name not same notif1"
-	         gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName" "$string_AppNum" "[]" '{}' 5000
-	       elif [ "$GDBus_Seperate1_2" != "$GDBus_Seperate1_1" ] && [ "$GDBus_CommonName1_2" != "$GDBus_CommonName1_1" ]; then
-		    echo "down num not same name not same notif1"
-                    gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName2" "$string_AppNum2" "[]" '{}' 5000
-                  elif [ -f $HOME/.cache/waynotif/android_process ]; then
-	   	       echo "down android process"
-	               gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName2" "$string_AppNum2" "[]" '{}' 5000
-	             else
-                        echo "No notification(s) empty down notif1"
+	    echo "down num not same name same notif1"
+	    gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName" "$string_AppNum" "[]" '{}' 5000
+         elif [ "$GDBus_Seperate1_2" == "$GDBus_Seperate1_1" ] && [ "$GDBus_CommonName1_2" != "$GDBus_CommonName1_1" ]; then
+	    echo "down num same name not same notif1"
+	    gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName" "$string_AppNum" "[]" '{}' 5000
+         elif [ -f $HOME/.cache/waynotif/android_process ]; then
+	     echo "down android process"
+	     gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName2" "$string_AppNum2" "[]" '{}' 5000
+	 else
+             echo "No notification(s) empty down notif1"
+	     Notif1="false"
          fi
 
-	 # Sleep to make sure two notifications don't overlap.
-	 sleep 6s
+	 # Check if first notification is up and if not sleep to make sure two notifications don't overlap.
+	 if [ "$Notif1" == "false" ]; then
+	    true
+	 else
+	    sleep 6s
+         fi
 
 	 # Second notification test.
-	 if [ "$GDBus_Seperate2_2" == "$GDBus_Seperate2_1" ] && [ "$GDBus_CommonName2_2" == "$GDBus_CommonName2_1" ]; then
+	 if [ "$GDBus_Seperate2_2" == "$GDBus_Seperate2_1" ] && [ "$GDBus_CommonName2_2" == "$GDBus_CommonName2_1" ] && [ "$GDBus_Preview2_2" == "$GDBus_Preview2_1" ] && [ ! -z "$GDBus_Preview2_1" ] && [ ! -z "$GDBus_CommonName2_2" ]; then
             echo "No new notification(s) down notif2"
-         elif [ "$GDBus_Seperate2_2" != "$GDBus_Seperate2_1" ] && [ "$GDBus_CommonName2_2" == "$GDBus_CommonName2_1" ]; then
-	      echo "down num not same name same notif2"
-              gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName2" "$string_AppNum2" "[]" '{}' 5000
-            elif [ "$GDBus_Seperate2_2" == "$GDBus_Seperate2_1" ] && [ "$GDBus_CommonName2_2" != "$GDBus_CommonName2_1" ]; then
-		 echo "down num same name not same notif2"
-	         gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName2" "$string_AppNum2" "[]" '{}' 5000
-	       else
-                  echo "No notification(s) empty down notif2"
+         elif [ "$GDBus_Seperate2_2" != "$GDBus_Seperate2_1" ] && [ "$GDBus_CommonName2_2" == "$GDBus_CommonName2_1" ] && [ "$GDBus_Preview2_2" == "GDBus_Preview2_1" ] && [ ! -z "$GDBus_Preview2_1" ] && [ ! -z "$GDBus_CommonName2_2" ]; then
+            echo "down num not same name same preview same notif2"
+            gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName2" "$string_AppNum2" "[]" '{}' 5000
+         elif [ "$GDBus_Seperate2_2" == "$GDBus_Seperate2_1" ] && [ "$GDBus_CommonName2_2" == "$GDBus_CommonName2_1" ] && [ "$GDBus_Preview2_2" != "GDBus_Preview2_1" ] && [ ! -z "$GDBus_Preview2_1" ] && [ ! -z "$GDBus_CommonName2_2" ]; then
+            echo "down num same name same preview not same notif2"
+            gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName2" "$string_AppNum2" "[]" '{}' 5000
+         elif [ "$GDBus_Seperate2_2" != "$GDBus_Seperate2_1" ] && [ "$GDBus_CommonName2_2" == "$GDBus_CommonName2_1" ] && [ "$GDBus_Preview2_2" != "GDBus_Preview2_1" ] && [ ! -z "$GDBus_Preview2_1" ] && [ ! -z "$GDBus_CommonName2_2" ]; then
+            echo "down num not same name same preview not same notif2"
+         elif [ "$GDBus_Seperate2_1" == "$GDBus_Seperate2_2" ] && [ "$GDBus_CommonName2_1" == "$GDBus_CommonName2_2" ] && [ "$GDBus_Preview2_1" != "GDBus_Preview2_2" ] && [ ! -z "$GDBus_Preview2_1" ]; then
+            echo "down num same name same preview not same notif2"
+
+	    # Check for a duplicate and prevent it.
+            if [ "$GDBus_string2_2" == "$GDBus_string2_1" ]; then
+               true
+            else
+               gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName2" "$string_AppNum2" "[]" '{}' 5000
+            fi
+
+         elif [ "$GDBus_Seperate2_2" != "$GDBus_Seperate2_1" ] && [ "$GDBus_CommonName2_2" == "$GDBus_CommonName2_1" ] && [ ! -z "$GDBus_CommonName2_2" ]; then
+	    echo "down num not same name same notif2"
+            gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName2" "$string_AppNum2" "[]" '{}' 5000
+         elif [ "$GDBus_Seperate2_2" == "$GDBus_Seperate2_1" ] && [ "$GDBus_CommonName2_2" != "$GDBus_CommonName2_1" ] && [ ! -z "$GDBus_CommonName2_2" ]; then
+	    echo "down num same name not same notif2"
+	    gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "notify-send" 1 "phone" "$string_AppName2" "$string_AppNum2" "[]" '{}' 5000
+         else
+            echo "No notification(s) empty down notif2"
          fi
 
       fi
