@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# Add the following entry to /etc/sudoers (using either nano or visudo)
+# Add the following entries to /etc/sudoers (using either nano or visudo)
 # phablet ALL=(ALL) NOPASSWD:/usr/bin/waydroid
+# phablet ALL=(ALL) NOPASSWD:/bin/mount
 USERNAME=$(whoami)
 
 # export DBus session address
@@ -50,6 +51,8 @@ if [ ! -d $HOME/.cache/waynotif/notifications/ ] || [ ! -d $HOME/.cache/waynotif
    touch $HOME/.cache/waynotif/notifications/notif_seperate-1
    touch $HOME/.cache/waynotif/notifications/notif_seperate-2
    touch $HOME/.cache/waynotif/first_run
+   touch $HOME/.cache/waynotif/notifications/string
+   touch $HOME/.cache/waynotif/notifications2/string
 fi
 
 # Check if cronjob is set in place.
@@ -64,7 +67,6 @@ else
       sudo mount -o remount,ro /
    fi
 fi
-
 
 if [ -f $HOME/.cache/waynotif/notifications/ran ]; then
    # Get notifications from dumpsys (not 100% accurate).
