@@ -1,0 +1,46 @@
+#!/bin/bash
+
+whoami > /tmp/whoami
+
+while true; do
+    if [ ! -f $HOME/waynotif ]; then
+       read -p "Do you want to install WayNotif? (Y/n) " yn
+    fi
+
+    if [ -f $HOME/waynotif ]; then
+       read -p "Do you want to reinstall WayNotif? (Y/n) " yn
+    fi
+    case $yn in
+         [Yy]* ) echo "Starting the installation." && break;;
+         [Nn]* ) exit 1;;
+         * ) echo "Please answer Y(es) or N(o).";;
+    esac
+done
+
+echo "Downloading WayNotif..."
+curl https://raw.githubusercontent.com/BardiaMGTGC/WayNotif/main/waynotif --output $HOME/waynotif &> /dev/null
+chmod +x $HOME/waynotif
+
+if [ -d $HOME/.cache/waynotif ]; then
+   rm -rf $HOME/.cache/waynotif/notifications*
+   touch $HOME/.cache/waynotif/already_installed
+fi
+
+if [ ! -f $HOME/.cache/waynotif/already_installed ]; then
+   echo "Adding needed entries to sudoers."
+
+   if [ "$USERNAME" == "phablet" ]; then
+      sudo mount -o remount,rw /
+      sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/usr/bin/waydroid"' >> /etc/sudoers
+      sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/bin/mount" >> /etc/sudoers'
+      sudo mount -o remount,ro /
+   else
+      sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/usr/bin/waydroid" >> /etc/sudoers'
+      sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/bin/mount" >> /etc/sudoers'
+   fi
+else
+   echo "Did not add sudoers entries."
+   rm -f $HOME/.cache/waynotif/already_installed
+fi
+
+rm -f /tmp/whoami
