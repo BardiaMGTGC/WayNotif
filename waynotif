@@ -15,7 +15,7 @@ else
    exit 1
 fi
 
-# Check if Waydroid is installed.
+# Check whether or not Waydroid is installed.
 if [ $(LANG=C type waydroid 2>/dev/null | wc -l) = 1 ]; then
    true
 else
@@ -23,6 +23,7 @@ else
    exit 1
 fi
 
+# Check whether or not Waydroid is initialized.
 if [ ! -f /var/lib/waydroid/images/system.img ]; then
    echo "Waydroid is not initialized. Run waydroid init."
    exit 1
