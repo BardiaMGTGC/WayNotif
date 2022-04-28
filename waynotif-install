@@ -1,34 +1,85 @@
 #!/bin/bash
 
+# Check if Waydroid is installed.
+if [ $(LANG=C type waydroid 2>/dev/null | wc -l) = 1 ]; then
+   true
+else
+   echo "Waydroid is not installed"
+   exit 1
+fi
+
+# Save username of current user to a file so that it can be used later.
 whoami > /tmp/whoami
 
+# Prompt user for WayNotif installation.
 while true; do
     if [ ! -f $HOME/waynotif ]; then
        read -p "Do you want to install WayNotif? (Y/n) " yn
-    fi
-
-    if [ -f $HOME/waynotif ]; then
+    else
        read -p "Do you want to reinstall WayNotif? (Y/n) " yn
     fi
     case $yn in
-         [Yy]* ) echo "Starting the installation." && break;;
-         [Nn]* ) exit 1;;
+         [Yy]* ) WAYNOTIF=true && break;;
+         [Nn]* ) WAYNOTIF=false;;
          * ) echo "Please answer Y(es) or N(o).";;
     esac
 done
 
-echo "Downloading WayNotif..."
-curl https://raw.githubusercontent.com/BardiaMGTGC/WayNotif/main/waynotif --output $HOME/waynotif &> /dev/null
-chmod +x $HOME/waynotif
+# Prompt user for Waydroid Unsuspend icon installation.
+while true; do
+    if [ ! -f $HOME/.local/share/applications/unsuspend-waydroid.desktop ]; then
+       read -p "Do you want to install Waydroid Unsuspend? (Y/n) " yn
+    else
+       read -p "Do you want to reinstall Waydroid Unsuspend? (Y/n) " yn
+    fi
+    case $yn in
+         [Yy]* ) UNSUSPEND=true && break;;
+         [Nn]* ) UNSUSPEND=false;;
+         * ) echo "Please answer Y(es) or N(o).";;
+    esac
+done
 
-if [ -d $HOME/.cache/waynotif ]; then
-   rm -rf $HOME/.cache/waynotif/notifications*
-   touch $HOME/.cache/waynotif/already_installed
+# Prompt user for Waydroid Suspend icon installation.
+while true; do
+    if [ ! -f $HOME/.local/share/applications/suspend-waydroid.desktop ]; then
+       read -p "Do you want to install Waydroid Suspend? (Y/n) " yn
+    else
+       read -p "Do you want to reinstall Waydroid Suspend? (Y/n) " yn
+    fi
+    case $yn in
+         [Yy]* ) SUSPEND=true && break;;
+         [Nn]* ) SUSPEND=false;;
+         * ) echo "Please answer Y(es) or N(o).";;
+    esac
+done
+
+# WayNotif installation.
+if [ "$WAYNOTIF" == "true" ]; then
+   echo "Installing WayNotif..."
+   curl https://raw.githubusercontent.com/BardiaMGTGC/WayNotif/main/waynotif --output $HOME/waynotif &> /dev/null
+   chmod +x $HOME/waynotif
+   if [ -d $HOME/.cache/waynotif ]; then
+      rm -rf $HOME/.cache/waynotif/notifications*
+   fi
 fi
 
-if [ ! -f $HOME/.cache/waynotif/already_installed ]; then
-   echo "Adding needed entries to sudoers."
+# Waydroid Unsuspend installation.
+if [ "$UNSUSPEND" == "true" ]; then
+   echo "Installing Waydroid Unsuspend..."
+   wget https://bardia.tech/unsuspend-waydroid.desktop --output-document=$HOME/.local/share/applications/unsuspend-waydroid.desktop &> /dev/null
+fi
 
+# Waydroid Suspend installation.
+if [ "$SUSPEND" == "true" ]; then
+   echo "Installing Waydroid Suspend..."
+   wget https://bardia.tech/suspend-waydroid.desktop --output-document=$HOME/.local/share/applications/suspend-waydroid.desktop &> /dev/null
+fi
+
+# Add user to sudoers so that script can use waydroid command without a password.
+if sudo cat /etc/sudoers | grep waydroid; then
+   echo "Did not add sudoers entries."
+else
+   echo "Adding needed entries to sudoers."
    if [ "$USERNAME" == "phablet" ]; then
       sudo mount -o remount,rw /
       sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/usr/bin/waydroid"' >> /etc/sudoers
@@ -38,9 +89,18 @@ if [ ! -f $HOME/.cache/waynotif/already_installed ]; then
       sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/usr/bin/waydroid" >> /etc/sudoers'
       sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/bin/mount" >> /etc/sudoers'
    fi
-else
-   echo "Did not add sudoers entries."
-   rm -f $HOME/.cache/waynotif/already_installed
+fi
+
+if [ "$UNSUSPEND" == "true" ]; then
+   echo setprop service.adb.tcp.port 5555 | sudo waydroid shell
+   echo stop adbd | sudo waydroid shell
+   echo start adbd | sudo waydroid shell
+fi
+
+if [ "$SUSPEND" == "true" ]; then
+   echo setprop service.adb.tcp.port 5555 | sudo waydroid shell
+   echo stop adbd | sudo waydroid shell
+   echo start adbd | sudo waydroid shell
 fi
 
 rm -f /tmp/whoami
