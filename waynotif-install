@@ -20,49 +20,66 @@ if waydroid status | grep STOPPED; then
    exit 1
 fi
 
-# Save username of current user to a file so that it can be used later.
-whoami > /tmp/whoami
-
 # Prompt user for WayNotif installation.
 while true; do
+
     if [ ! -f $HOME/waynotif ]; then
        read -p "Do you want to install WayNotif? (Y/n) " yn
     else
        read -p "Do you want to reinstall WayNotif? (Y/n) " yn
     fi
+
     case $yn in
          [Yy]* ) WAYNOTIF=true && break;;
          [Nn]* ) WAYNOTIF=false;;
          * ) echo "Please answer Y(es) or N(o).";;
     esac
+
 done
 
 # Prompt user for Waydroid Unsuspend icon installation.
 while true; do
+
     if [ ! -f $HOME/.local/share/applications/unsuspend-waydroid.desktop ]; then
        read -p "Do you want to install Waydroid Unsuspend? (Y/n) " yn
     else
        read -p "Do you want to reinstall Waydroid Unsuspend? (Y/n) " yn
     fi
+
     case $yn in
          [Yy]* ) UNSUSPEND=true && break;;
          [Nn]* ) UNSUSPEND=false;;
          * ) echo "Please answer Y(es) or N(o).";;
     esac
+
 done
 
 # Prompt user for Waydroid Suspend icon installation.
 while true; do
+
     if [ ! -f $HOME/.local/share/applications/suspend-waydroid.desktop ]; then
        read -p "Do you want to install Waydroid Suspend? (Y/n) " yn
     else
        read -p "Do you want to reinstall Waydroid Suspend? (Y/n) " yn
     fi
+
     case $yn in
          [Yy]* ) SUSPEND=true && break;;
          [Nn]* ) SUSPEND=false;;
          * ) echo "Please answer Y(es) or N(o).";;
     esac
+
+done
+
+# Prompt user for Waydroid optimizations.
+while true; do
+       read -p "Do you want to install Waydroid Unsuspend? (Y/n) " yn
+    case $yn in
+         [Yy]* ) OPTIMIZE=true && break;;
+         [Nn]* ) OPTIMIZE=false;;
+         * ) echo "Please answer Y(es) or N(o).";;
+    esac
+
 done
 
 # WayNotif installation.
@@ -92,27 +109,38 @@ if sudo cat /etc/sudoers | grep waydroid; then
    echo "Did not add sudoers entries."
 else
    echo "Adding needed entries to sudoers."
+   # Save username of current user to a file so that it can be used later.
+   whoami > /tmp/whoami
+
    if [ "$USERNAME" == "phablet" ]; then
       sudo mount -o remount,rw /
       sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/usr/bin/waydroid"' >> /etc/sudoers
       sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/bin/mount" >> /etc/sudoers'
       sudo mount -o remount,ro /
+      rm -f /tmp/whoami
    else
       sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/usr/bin/waydroid" >> /etc/sudoers'
       sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/bin/mount" >> /etc/sudoers'
+      rm -f /tmp/whoami
    fi
 fi
 
+# Enable adb over network so that unsuspend icon can use it.
 if [ "$UNSUSPEND" == "true" ]; then
    echo setprop service.adb.tcp.port 5555 | sudo waydroid shell
    echo stop adbd | sudo waydroid shell
    echo start adbd | sudo waydroid shell
 fi
 
+# Enable adb over network so that suspend icon can use it.
 if [ "$SUSPEND" == "true" ]; then
    echo setprop service.adb.tcp.port 5555 | sudo waydroid shell
    echo stop adbd | sudo waydroid shell
    echo start adbd | sudo waydroid shell
 fi
 
-rm -f /tmp/whoami
+# Apply Waydroid optimizations.
+if [ "$OPTIMIZE" == "true" ]; then
+   waydroid prop set persist.waydroid.suspend true
+   waydroid prop set ro.config.low_ram true
+fi
