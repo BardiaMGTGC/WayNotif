@@ -1,0 +1,5 @@
+[Desktop Entry]
+Type=Application
+Name=Waydroid Suspend
+Exec=/bin/bash -c "sudo waydroid shell adbd& adb connect 192.168.250.216; adb shell input keyevent KEYCODE_SLEEP && sudo kill $(ps -u 2000 | awk '{print $1}' | grep -v PID)"
+Icon=/usr/lib/waydroid/data/AppIcon.png
