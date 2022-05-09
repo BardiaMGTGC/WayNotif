@@ -73,7 +73,7 @@ done
 
 # Prompt user for Waydroid optimizations.
 while true; do
-       read -p "Do you want to install Waydroid Unsuspend? (Y/n) " yn
+       read -p "Do want to install Waydroid optimizations? (Y/n) " yn
     case $yn in
          [Yy]* ) OPTIMIZE=true && break;;
          [Nn]* ) OPTIMIZE=false && break;;
@@ -101,27 +101,30 @@ fi
 # Waydroid Suspend installation.
 if [ "$SUSPEND" == "true" ]; then
    echo "Installing Waydroid Suspend..."
-   wget https://bardia.tech/suspend-waydroid.desktop --output-document=$HOME/.local/share/applications/suspend-waydroid.desktop &> /dev/null
+   wget https:t//bardia.tech/suspend-waydroid.desktop --output-document=$HOME/.local/share/applications/suspend-waydroid.desktop &> /dev/null
 fi
 
-# Add user to sudoers so that script can use waydroid command without a password.
-if sudo cat /etc/sudoers | grep waydroid; then
+# Check if anything was installed first if they were then add user to sudoers so that script can use Waydroid command without a password.
+if [ "$SUSPEND" == "false" ] && [ "$UNSUSPEND" == "false" ] && [ "$WAYNOTIF" == "false" ]; then
    echo "Did not add sudoers entries."
 else
-   echo "Adding needed entries to sudoers."
-   # Save username of current user to a file so that it can be used later.
-   whoami > /tmp/whoami
-
-   if [ "$USERNAME" == "phablet" ]; then
-      sudo mount -o remount,rw /
-      sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/usr/bin/waydroid"' >> /etc/sudoers
-      sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/bin/mount" >> /etc/sudoers'
-      sudo mount -o remount,ro /
-      rm -f /tmp/whoami
+   if sudo cat /etc/sudoers | grep waydroid; then
+      echo "Did not add sudoers entries."
    else
-      sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/usr/bin/waydroid" >> /etc/sudoers'
-      sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/bin/mount" >> /etc/sudoers'
-      rm -f /tmp/whoami
+      echo "Adding needed entries to sudoers."
+      # Save username of current user to a file so that it can be used later.
+      whoami > /tmp/whoami
+      if [ "$USER" == "phablet" ]; then
+         sudo mount -o remount,rw /
+         sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/usr/bin/waydroid" >> /etc/sudoers'
+         sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/bin/mount" >> /etc/sudoers'
+         sudo mount -o remount,ro /
+         rm -f /tmp/whoami
+      else
+         sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/usr/bin/waydroid" >> /etc/sudoers'
+         sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/bin/mount" >> /etc/sudoers'
+         rm -f /tmp/whoami
+      fi
    fi
 fi
 
