@@ -31,7 +31,7 @@ while true; do
 
     case $yn in
          [Yy]* ) WAYNOTIF=true && break;;
-         [Nn]* ) WAYNOTIF=false;;
+         [Nn]* ) WAYNOTIF=false && break;;
          * ) echo "Please answer Y(es) or N(o).";;
     esac
 
@@ -48,7 +48,7 @@ while true; do
 
     case $yn in
          [Yy]* ) UNSUSPEND=true && break;;
-         [Nn]* ) UNSUSPEND=false;;
+         [Nn]* ) UNSUSPEND=false && break;;
          * ) echo "Please answer Y(es) or N(o).";;
     esac
 
@@ -65,7 +65,7 @@ while true; do
 
     case $yn in
          [Yy]* ) SUSPEND=true && break;;
-         [Nn]* ) SUSPEND=false;;
+         [Nn]* ) SUSPEND=false && break;;
          * ) echo "Please answer Y(es) or N(o).";;
     esac
 
@@ -76,7 +76,7 @@ while true; do
        read -p "Do you want to install Waydroid Unsuspend? (Y/n) " yn
     case $yn in
          [Yy]* ) OPTIMIZE=true && break;;
-         [Nn]* ) OPTIMIZE=false;;
+         [Nn]* ) OPTIMIZE=false && break;;
          * ) echo "Please answer Y(es) or N(o).";;
     esac
 
