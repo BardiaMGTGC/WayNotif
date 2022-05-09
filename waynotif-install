@@ -101,7 +101,7 @@ fi
 # Waydroid Suspend installation.
 if [ "$SUSPEND" == "true" ]; then
    echo "Installing Waydroid Suspend..."
-   wget https:t//bardia.tech/suspend-waydroid.desktop --output-document=$HOME/.local/share/applications/suspend-waydroid.desktop &> /dev/null
+   wget https://bardia.tech/suspend-waydroid.desktop --output-document=$HOME/.local/share/applications/suspend-waydroid.desktop &> /dev/null
 fi
 
 # Check if anything was installed first if they were then add user to sudoers so that script can use Waydroid command without a password.
