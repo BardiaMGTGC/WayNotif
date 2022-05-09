@@ -1,5 +1,5 @@
 [Desktop Entry]
 Type=Application
 Name=Waydroid Suspend
-Exec=/bin/bash -c "sudo waydroid shell adbd& adb connect 192.168.250.216; adb shell input keyevent KEYCODE_SLEEP && sudo kill $(ps -u 2000 | awk '{print $1}' | grep -v PID)"
+Exec=/bin/bash -c "if waydroid status | grep RUNNING; then sudo waydroid shell adbd& adb connect 192.168.250.216; adb shell input keyevent KEYCODE_SLEEP && export $(cat /run/user/$(id -u)/dbus-session); gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify 'notify-send' 1 'phone' 'Waydroid Suspend' 'Waydroid has been suspended' '[]' '{}' 5000; sudo kill $(ps -u 2000 | awk '{print $1}' | grep -v PID); else export $(cat /run/user/$(id -u)/dbus-session); gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify 'notify-send' 1 'phone' 'Waydroid Suspend' 'Waydroid is not running' "[]" '{}' 5000; fi"
 Icon=/usr/lib/waydroid/data/AppIcon.png
