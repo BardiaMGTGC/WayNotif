@@ -107,24 +107,22 @@ fi
 # Check if anything was installed first if they were then add user to sudoers so that script can use Waydroid command without a password.
 if [ "$SUSPEND" == "false" ] && [ "$UNSUSPEND" == "false" ] && [ "$WAYNOTIF" == "false" ]; then
    echo "Did not add sudoers entries."
+elif sudo cat /etc/sudoers | grep waydroid; then
+   echo "Did not add sudoers entries."
 else
-   if sudo cat /etc/sudoers | grep waydroid; then
-      echo "Did not add sudoers entries."
+   echo "Adding needed entries to sudoers."
+   # Save username of current user to a file so that it can be used later.
+   whoami > /tmp/whoami
+   if [ "$USER" == "phablet" ]; then
+      sudo mount -o remount,rw /
+      sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/usr/bin/waydroid" >> /etc/sudoers'
+      sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/bin/mount" >> /etc/sudoers'
+      sudo mount -o remount,ro /
+      rm -f /tmp/whoami
    else
-      echo "Adding needed entries to sudoers."
-      # Save username of current user to a file so that it can be used later.
-      whoami > /tmp/whoami
-      if [ "$USER" == "phablet" ]; then
-         sudo mount -o remount,rw /
-         sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/usr/bin/waydroid" >> /etc/sudoers'
-         sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/bin/mount" >> /etc/sudoers'
-         sudo mount -o remount,ro /
-         rm -f /tmp/whoami
-      else
-         sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/usr/bin/waydroid" >> /etc/sudoers'
-         sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/bin/mount" >> /etc/sudoers'
-         rm -f /tmp/whoami
-      fi
+      sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/usr/bin/waydroid" >> /etc/sudoers'
+      sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/bin/mount" >> /etc/sudoers'
+      rm -f /tmp/whoami
    fi
 fi
 
