@@ -127,6 +127,23 @@ while true; do
 
 done
 
+# Prompt user for ncdu installation.
+while true; do
+
+    if [ ! -f $HOME/.local/share/applications/ncdu.desktop ]; then
+       read -p "Do you want to install ncdu? (Intended for Ubuntu Touch) (Y/n) " yn
+    else
+       read -p "Do you want to reinstall ncdu? (Intended for Ubuntu Touch) (Y/n) " yn
+    fi
+
+    case $yn in
+         [Yy]* ) NCDU=true && break;;
+         [Nn]* ) NCDU=false && break;;
+         * ) echo "Please answer Y(es) or N(o).";;
+    esac
+
+done
+
 # Prompt user for libertine shell icon installation.
 while true; do
 
@@ -182,14 +199,14 @@ if [ "$HTOP" == "true" ]; then
    fi
 
    wget https://github.com/tuxecure/crackle/releases/download/v0.2.9.4/crackle.zip --output-document=$HOME/.cache/crackle.zip &> /dev/null
-   unzip $HOME/.cache/crackle.zip -d $HOME/.cache/crackle
+   unzip $HOME/.cache/crackle.zip -d $HOME/.cache/crackle &> /dev/null
    cd $HOME/.cache
    crackle/crackle setup &> /dev/null
    source $HOME/.bashrc
    rm -rf $HOME/.cache/crackle
    crackle install htop &> /dev/null
-   wget https://bardia.tech/htop.desktop --output-document=$HOME/.local/share/applications/htop.desktop
-   wget https://bardia.tech/htop.png --output-document=$HOME/.local/share/icons/htop.png
+   wget https://bardia.tech/htop.desktop --output-document=$HOME/.local/share/applications/htop.desktop &> /dev/null
+   wget https://bardia.tech/htop.png --output-document=$HOME/.local/share/icons/htop.png &> /dev/null
    echo "htop installed successfully."
 fi
 
@@ -206,19 +223,43 @@ if [ "$BASHTOP" == "true" ]; then
    fi
 
    wget https://github.com/tuxecure/crackle/releases/download/v0.2.9.4/crackle.zip --output-document=$HOME/.cache/crackle.zip &> /dev/null
-   unzip $HOME/.cache/crackle.zip -d $HOME/.cache/crackle
+   unzip $HOME/.cache/crackle.zip -d $HOME/.cache/crackle &> /dev/null
    cd $HOME/.cache
    crackle/crackle setup &> /dev/null
    source $HOME/.bashrc
    rm -rf $HOME/.cache/crackle
    crackle install bash bashtop &> /dev/null
-   wget https://bardia.tech/bashtop.desktop --output-document=$HOME/.local/share/applications/bashtop.desktop
-   wget https://bardia.tech/bashtop.png --output-document=$HOME/.local/share/icons/bashtop.png
+   wget https://bardia.tech/bashtop.desktop --output-document=$HOME/.local/share/applications/bashtop.desktop &> /dev/null
+   wget https://bardia.tech/bashtop.png --output-document=$HOME/.local/share/icons/bashtop.png &> /dev/null
    if cat $(which bashtop) | grep "#!/bin/bash"; then
       awk '{gsub("#!/bin/bash, "#!/home/phablet/.local/bin/bash");print}' $(which bashtop) > $HOME/.cache/bashtop
       mv $HOME/.cache/bashtop $(which bashtop)
    fi
    echo "bashtop installed successfully."
+fi
+
+# htop installation.
+if [ "$NCDU" == "true" ]; then
+   echo "Installing ncdu..."
+
+   if [ ! -d $HOME/.cache ]; then
+      mkdir -p $HOME/.cache
+   fi
+
+   if [ ! -d $HOME/.local/share/icons ]; then
+      mkdir -p $HOME/.local/share/icons
+   fi
+
+   wget https://github.com/tuxecure/crackle/releases/download/v0.2.9.4/crackle.zip --output-document=$HOME/.cache/crackle.zip &> /dev/null
+   unzip $HOME/.cache/crackle.zip -d $HOME/.cache/crackle &> /dev/null
+   cd $HOME/.cache
+   crackle/crackle setup &> /dev/null
+   source $HOME/.bashrc
+   rm -rf $HOME/.cache/crackle
+   crackle install htop &> /dev/null
+   wget https://bardia.tech/ncdu.desktop --output-document=$HOME/.local/share/applications/ncdu.desktop &> /dev/null
+   wget https://bardia.tech/ncdu.png --output-document=$HOME/.local/share/icons/ncdu.png &> /dev/null
+   echo "ncdu installed successfully."
 fi
 
 # Libertine shell icon installation.
@@ -229,8 +270,8 @@ if [ "$LIBERTINE" == "true" ]; then
       mkdir -p $HOME/.local/bin
    fi
 
-   wget https://bardia.tech/libertine.desktop --output-document=$HOME/.local/share/applications/libertine.desktop
-   wget https://bardia.tech/lish --output-document=$HOME/.local/bin/lish
+   wget https://bardia.tech/libertine.desktop --output-document=$HOME/.local/share/applications/libertine.desktop &> /dev/null
+   wget https://bardia.tech/lish --output-document=$HOME/.local/bin/lish &> /dev/null
    chmod +x $HOME/.local/bin/lish
    echo "Libertine shell icon installed successfully."
 fi
