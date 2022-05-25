@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=false
+Exec=env SHELL=/home/phablet/.local/bin/ncdu QML2_IMPORT_PATH=/usr/lib/aarch64-linux-gnu/qt5/imports:/opt/click.ubuntu.com/.click/users/@all/com.ubuntu.terminal/lib/aarch64-linux-gnu XDG_DATA_DIRS=/opt/click.ubuntu.com/.click/users/@all/com.ubuntu.terminal:/usr/share/ubuntu-touch:/usr/share/ubuntu-touch::/usr/share/ /opt/click.ubuntu.com/.click/users/@all/com.ubuntu.terminal/lib/aarch64-linux-gnu/bin/terminal
+Icon=/home/phablet/.local/share/icons/ncdu.png
+Name=ncdu
+X-Ubuntu-Default-Department-ID=accessories
+X-Ubuntu-Splash-Color=#414141
+X-Ubuntu-Splash-Image=terminal-app-splash.svg
+Path=/opt/click.ubuntu.com/.click/users/@all/com.ubuntu.terminal
+X-Ubuntu-Old-Icon=terminal-app.svg
+X-Ubuntu-UAL-Source-Desktop=/opt/click.ubuntu.com/.click/users/@all/com.ubuntu.terminal/ubuntu-terminal-app.desktop
