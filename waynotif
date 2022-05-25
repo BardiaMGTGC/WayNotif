@@ -594,11 +594,8 @@ else
             else
                echo "No notification(s) empty down notif2"
             fi
-
          else
             echo "No notification(s) empty bubble down notif2"
          fi
-
       fi
-
 fi
