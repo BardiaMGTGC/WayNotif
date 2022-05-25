@@ -92,16 +92,147 @@ if [ "$WAYNOTIF" == "true" ]; then
    fi
 fi
 
+# Prompt user for htop installation.
+while true; do
+
+    if [ ! -f $HOME/.local/share/applications/htop.desktop ]; then
+       read -p "Do you want to install htop? (Intended for Ubuntu Touch) (Y/n) " yn
+    else
+       read -p "Do you want to reinstall htop? (Intended for Ubuntu Touch) (Y/n) " yn
+    fi
+
+    case $yn in
+         [Yy]* ) HTOP=true && break;;
+         [Nn]* ) HTOP=false && break;;
+         * ) echo "Please answer Y(es) or N(o).";;
+    esac
+
+done
+
+
+# Prompt user for bashtop installation.
+while true; do
+
+    if [ ! -f $HOME/.local/share/applications/bashtop.desktop ]; then
+       read -p "Do you want to install bashtop? (Intended for Ubuntu Touch) (Y/n) " yn
+    else
+       read -p "Do you want to reinstall bashtop? (Intended for Ubuntu Touch) (Y/n) " yn
+    fi
+
+    case $yn in
+         [Yy]* ) BASHTOP=true && break;;
+         [Nn]* ) BASHTOP=false && break;;
+         * ) echo "Please answer Y(es) or N(o).";;
+    esac
+
+done
+
+# Prompt user for libertine shell icon installation.
+while true; do
+
+    if [ ! -f $HOME/.local/share/applications/libertine.desktop ]; then
+       read -p "Do you want to install libertine shell icon? (Intended for Ubuntu Touch) (Y/n) " yn
+    else
+       read -p "Do you want to reinstall liberitne shell icon? (Intended for Ubuntu Touch) (Y/n) " yn
+    fi
+
+    case $yn in
+         [Yy]* ) LIBERTINE=true && break;;
+         [Nn]* ) LIBERTINE=false && break;;
+         * ) echo "Please answer Y(es) or N(o).";;
+    esac
+
+done
+
+# WayNotif installation.
+if [ "$WAYNOTIF" == "true" ]; then
+   echo "Installing WayNotif..."
+   curl https://raw.githubusercontent.com/BardiaMGTGC/WayNotif/main/waynotif --output $HOME/waynotif &> /dev/null
+   chmod +x $HOME/waynotif
+   if [ -d $HOME/.cache/waynotif ]; then
+      rm -rf $HOME/.cache/waynotif/notifications*
+   fi
+   echo "Waynotif installed successfully."
+fi
+
 # Waydroid Unsuspend installation.
 if [ "$UNSUSPEND" == "true" ]; then
    echo "Installing Waydroid Unsuspend..."
    wget https://bardia.tech/unsuspend-waydroid.desktop --output-document=$HOME/.local/share/applications/unsuspend-waydroid.desktop &> /dev/null
+   echo "Waydroid Unsuspend installed successfulyl"
 fi
 
 # Waydroid Suspend installation.
 if [ "$SUSPEND" == "true" ]; then
    echo "Installing Waydroid Suspend..."
    wget https://bardia.tech/suspend-waydroid.desktop --output-document=$HOME/.local/share/applications/suspend-waydroid.desktop &> /dev/null
+   echo "Waydorid Suspend installed successfully."
+fi
+
+# htop installation.
+if [ "$HTOP" == "true" ]; then
+   echo "Installing htop..."
+
+   if [ ! -d $HOME/.cache ]; then
+      mkdir -p $HOME/.cache
+   fi
+
+   if [ ! -d $HOME/.local/share/icons ]; then
+      mkdir -p $HOME/.local/share/icons
+   fi
+
+   wget https://github.com/tuxecure/crackle/releases/download/v0.2.9.4/crackle.zip --output-document=$HOME/.cache/crackle.zip &> /dev/null
+   unzip $HOME/.cache/crackle.zip -d $HOME/.cache/crackle
+   cd $HOME/.cache
+   crackle/crackle setup &> /dev/null
+   source $HOME/.bashrc
+   rm -rf $HOME/.cache/crackle
+   crackle install htop &> /dev/null
+   wget https://bardia.tech/htop.desktop --output-document=$HOME/.local/share/applications/htop.desktop
+   wget https://bardia.tech/htop.png --output-document=$HOME/.local/share/icons/htop.png
+   echo "htop installed successfully."
+fi
+
+# bashtop installation.
+if [ "$BASHTOP" == "true" ]; then
+   echo "Installing bashtop..."
+
+   if [ ! -d $HOME/.cache ]; then
+      mkdir -p $HOME/.cache
+   fi
+
+   if [ ! -d $HOME/.local/share/icons ]; then
+      mkdir -p $HOME/.local/share/icons
+   fi
+
+   wget https://github.com/tuxecure/crackle/releases/download/v0.2.9.4/crackle.zip --output-document=$HOME/.cache/crackle.zip &> /dev/null
+   unzip $HOME/.cache/crackle.zip -d $HOME/.cache/crackle
+   cd $HOME/.cache
+   crackle/crackle setup &> /dev/null
+   source $HOME/.bashrc
+   rm -rf $HOME/.cache/crackle
+   crackle install bash bashtop &> /dev/null
+   wget https://bardia.tech/bashtop.desktop --output-document=$HOME/.local/share/applications/bashtop.desktop
+   wget https://bardia.tech/bashtop.png --output-document=$HOME/.local/share/icons/bashtop.png
+   if cat $(which bashtop) | grep "#!/bin/bash"; then
+      awk '{gsub("#!/bin/bash, "#!/home/phablet/.local/bin/bash");print}' $(which bashtop) > $HOME/.cache/bashtop
+      mv $HOME/.cache/bashtop $(which bashtop)
+   fi
+   echo "bashtop installed successfully."
+fi
+
+# Libertine shell icon installation.
+if [ "$LIBERTINE" == "true" ]; then
+   echo "Installing libertine shell icon..."
+
+   if [ ! -d $HOME/.local/bin ]; then
+      mkdir -p $HOME/.local/bin
+   fi
+
+   wget https://bardia.tech/libertine.desktop --output-document=$HOME/.local/share/applications/libertine.desktop
+   wget https://bardia.tech/lish --output-document=$HOME/.local/bin/lish
+   chmod +x $HOME/.local/bin/lish
+   echo "Libertine shell icon installed successfully."
 fi
 
 # Check if anything was installed first if they were then add user to sudoers so that script can use Waydroid command without a password.
@@ -119,10 +250,12 @@ else
       sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/bin/mount" >> /etc/sudoers'
       sudo mount -o remount,ro /
       rm -f /tmp/whoami
+      echo "Waydroid has been added to sudoers."
    else
       sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/usr/bin/waydroid" >> /etc/sudoers'
       sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/bin/mount" >> /etc/sudoers'
       rm -f /tmp/whoami
+      echo "Waydroid has been added to sudoers."
    fi
 fi
 
@@ -144,4 +277,5 @@ fi
 if [ "$OPTIMIZE" == "true" ]; then
    waydroid prop set persist.waydroid.suspend true
    waydroid prop set ro.config.low_ram true
+   echo "Waydroid optimizations have been applied."
 fi
