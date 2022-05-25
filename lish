@@ -1,0 +1,3 @@
+#!/bin/bash
+CONNAME=$(libertine-container-manager list | head -n 1)
+libertine-launch -i $CONNAME bash
