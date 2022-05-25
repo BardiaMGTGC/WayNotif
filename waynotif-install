@@ -1,25 +1,5 @@
 #!/bin/bash
 
-# Check whether or not Waydroid is installed.
-if [ $(LANG=C type waydroid 2>/dev/null | wc -l) = 1 ]; then
-   true
-else
-   echo "Waydroid is not installed"
-   exit 1
-fi
-
-# Check whether or not Waydroid is initialized.
-if [ ! -f /var/lib/waydroid/images/system.img ]; then
-   echo "Waydroid is not initialized. Run waydroid init."
-   exit 1
-fi
-
-# Check whether or not Waydroid or even started in the first place.
-if waydroid status | grep STOPPED; then
-   echo "Waydroid is not running"
-   exit 1
-fi
-
 # Prompt user for WayNotif installation.
 while true; do
 
@@ -161,6 +141,28 @@ while true; do
 
 done
 
+if [ "$WAYNOTIF" == "true" ] || [ "$SUSPEND" == "true" ] || [ "$UNSUSPEND" == "true" ] || [ "$OPTIMIZE" == "true" ]; then
+
+   # Check whether or not Waydroid is installed.
+   if [ $(LANG=C type waydroid 2>/dev/null | wc -l) = 1 ]; then
+      true
+   else
+      echo "Waydroid is not installed"
+      exit 1
+   fi
+
+   # Check whether or not Waydroid is initialized.
+   if [ ! -f /var/lib/waydroid/images/system.img ]; then
+      echo "Waydroid is not initialized. Run waydroid init."
+      exit 1
+   fi
+
+   # Check whether or not Waydroid or even started in the first place.
+   if waydroid status | grep STOPPED; then
+      echo "Waydroid is not running"
+      exit 1
+   fi
+fi
 # WayNotif installation.
 if [ "$WAYNOTIF" == "true" ]; then
    echo "Installing WayNotif..."
@@ -169,7 +171,7 @@ if [ "$WAYNOTIF" == "true" ]; then
    if [ -d $HOME/.cache/waynotif ]; then
       rm -rf $HOME/.cache/waynotif/notifications*
    fi
-   echo "Waynotif installed successfully."
+   echo "WayNotif installed successfully."
 fi
 
 # Waydroid Unsuspend installation.
@@ -238,7 +240,7 @@ if [ "$BASHTOP" == "true" ]; then
    echo "bashtop installed successfully."
 fi
 
-# htop installation.
+# ncdu installation.
 if [ "$NCDU" == "true" ]; then
    echo "Installing ncdu..."
 
@@ -256,7 +258,7 @@ if [ "$NCDU" == "true" ]; then
    crackle/crackle setup &> /dev/null
    source $HOME/.bashrc
    rm -rf $HOME/.cache/crackle
-   crackle install htop &> /dev/null
+   crackle install ncdu &> /dev/null
    wget https://bardia.tech/ncdu.desktop --output-document=$HOME/.local/share/applications/ncdu.desktop &> /dev/null
    wget https://bardia.tech/ncdu.png --output-document=$HOME/.local/share/icons/ncdu.png &> /dev/null
    echo "ncdu installed successfully."
