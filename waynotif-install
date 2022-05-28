@@ -200,7 +200,7 @@ if [ "$HTOP" == "true" ]; then
       mkdir -p $HOME/.local/share/icons
    fi
 
-   wget https://github.com/tuxecure/crackle/releases/download/v0.2.9.4/crackle.zip --output-document=$HOME/.cache/crackle.zip &> /dev/null
+   wget https://github.com/tuxecure/crackle/releases/latest/download/crackle.zip --output-document=$HOME/.cache/crackle.zip &> /dev/null
    unzip $HOME/.cache/crackle.zip -d $HOME/.cache/crackle &> /dev/null
    cd $HOME/.cache
    crackle/crackle setup &> /dev/null
@@ -224,7 +224,7 @@ if [ "$BASHTOP" == "true" ]; then
       mkdir -p $HOME/.local/share/icons
    fi
 
-   wget https://github.com/tuxecure/crackle/releases/download/v0.2.9.4/crackle.zip --output-document=$HOME/.cache/crackle.zip &> /dev/null
+   wget https://github.com/tuxecure/crackle/releases/latest/download/crackle.zip --output-document=$HOME/.cache/crackle.zip &> /dev/null
    unzip $HOME/.cache/crackle.zip -d $HOME/.cache/crackle &> /dev/null
    cd $HOME/.cache
    crackle/crackle setup &> /dev/null
@@ -252,7 +252,7 @@ if [ "$NCDU" == "true" ]; then
       mkdir -p $HOME/.local/share/icons
    fi
 
-   wget https://github.com/tuxecure/crackle/releases/download/v0.2.9.4/crackle.zip --output-document=$HOME/.cache/crackle.zip &> /dev/null
+   https://github.com/tuxecure/crackle/releases/latest/download/crackle.zip --output-document=$HOME/.cache/crackle.zip &> /dev/null
    unzip $HOME/.cache/crackle.zip -d $HOME/.cache/crackle &> /dev/null
    cd $HOME/.cache
    crackle/crackle setup &> /dev/null
