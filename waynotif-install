@@ -62,16 +62,6 @@ while true; do
 
 done
 
-# WayNotif installation.
-if [ "$WAYNOTIF" == "true" ]; then
-   echo "Installing WayNotif..."
-   curl https://raw.githubusercontent.com/BardiaMGTGC/WayNotif/main/waynotif --output $HOME/waynotif &> /dev/null
-   chmod +x $HOME/waynotif
-   if [ -d $HOME/.cache/waynotif ]; then
-      rm -rf $HOME/.cache/waynotif/notifications*
-   fi
-fi
-
 # Prompt user for htop installation.
 while true; do
 
@@ -88,7 +78,6 @@ while true; do
     esac
 
 done
-
 
 # Prompt user for bashtop installation.
 while true; do
@@ -163,6 +152,7 @@ if [ "$WAYNOTIF" == "true" ] || [ "$SUSPEND" == "true" ] || [ "$UNSUSPEND" == "t
       exit 1
    fi
 fi
+
 # WayNotif installation.
 if [ "$WAYNOTIF" == "true" ]; then
    echo "Installing WayNotif..."
