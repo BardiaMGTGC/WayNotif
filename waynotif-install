@@ -271,7 +271,7 @@ fi
 # Check if anything was installed first if they were then add user to sudoers so that script can use Waydroid command without a password.
 if [ "$SUSPEND" == "false" ] && [ "$UNSUSPEND" == "false" ] && [ "$WAYNOTIF" == "false" ]; then
    echo "Did not add sudoers entries."
-elif sudo cat /etc/sudoers | grep waydroid; then
+elif sudo cat /etc/sudoers | grep waydroid >> /dev/null; then
    echo "Did not add sudoers entries."
 else
    echo "Adding needed entries to sudoers."
