@@ -167,14 +167,14 @@ fi
 # Waydroid Unsuspend installation.
 if [ "$UNSUSPEND" == "true" ]; then
    echo "Installing Waydroid Unsuspend..."
-   wget https://bardia.tech/unsuspend-waydroid.desktop --output-document=$HOME/.local/share/applications/unsuspend-waydroid.desktop &> /dev/null
+   wget https://raw.githubusercontent.com/BardiaMGTGC/WayNotif/main/unsuspend-waydroid.desktop --output-document=$HOME/.local/share/applications/unsuspend-waydroid.desktop &> /dev/null
    echo "Waydroid Unsuspend installed successfulyl"
 fi
 
 # Waydroid Suspend installation.
 if [ "$SUSPEND" == "true" ]; then
    echo "Installing Waydroid Suspend..."
-   wget https://bardia.tech/suspend-waydroid.desktop --output-document=$HOME/.local/share/applications/suspend-waydroid.desktop &> /dev/null
+   wget https://raw.githubusercontent.com/BardiaMGTGC/WayNotif/main/suspend-waydroid.desktop --output-document=$HOME/.local/share/applications/suspend-waydroid.desktop &> /dev/null
    echo "Waydorid Suspend installed successfully."
 fi
 
@@ -197,8 +197,8 @@ if [ "$HTOP" == "true" ]; then
    source $HOME/.bashrc
    rm -rf $HOME/.cache/crackle
    crackle install htop &> /dev/null
-   wget https://bardia.tech/htop.desktop --output-document=$HOME/.local/share/applications/htop.desktop &> /dev/null
-   wget https://bardia.tech/htop.png --output-document=$HOME/.local/share/icons/htop.png &> /dev/null
+   wget https://raw.githubusercontent.com/BardiaMGTGC/WayNotif/main/htop.desktop --output-document=$HOME/.local/share/applications/htop.desktop &> /dev/null
+   wget https://raw.githubusercontent.com/BardiaMGTGC/WayNotif/main/htop.png --output-document=$HOME/.local/share/icons/htop.png &> /dev/null
    echo "htop installed successfully."
 fi
 
@@ -221,8 +221,8 @@ if [ "$BASHTOP" == "true" ]; then
    source $HOME/.bashrc
    rm -rf $HOME/.cache/crackle
    crackle install bash bashtop &> /dev/null
-   wget https://bardia.tech/bashtop.desktop --output-document=$HOME/.local/share/applications/bashtop.desktop &> /dev/null
-   wget https://bardia.tech/bashtop.png --output-document=$HOME/.local/share/icons/bashtop.png &> /dev/null
+   wget https://raw.githubusercontent.com/BardiaMGTGC/WayNotif/main/bashtop.desktop --output-document=$HOME/.local/share/applications/bashtop.desktop &> /dev/null
+   wget https://raw.githubusercontent.com/BardiaMGTGC/WayNotif/main/bashtop.png --output-document=$HOME/.local/share/icons/bashtop.png &> /dev/null
    if cat $(which bashtop) | grep "#!/bin/bash"; then
       awk '{gsub("#!/bin/bash, "#!/home/phablet/.local/bin/bash");print}' $(which bashtop) > $HOME/.cache/bashtop
       mv $HOME/.cache/bashtop $(which bashtop)
@@ -249,8 +249,8 @@ if [ "$NCDU" == "true" ]; then
    source $HOME/.bashrc
    rm -rf $HOME/.cache/crackle
    crackle install ncdu &> /dev/null
-   wget https://bardia.tech/ncdu.desktop --output-document=$HOME/.local/share/applications/ncdu.desktop &> /dev/null
-   wget https://bardia.tech/ncdu.png --output-document=$HOME/.local/share/icons/ncdu.png &> /dev/null
+   wget https://raw.githubusercontent.com/BardiaMGTGC/WayNotif/main/ncdu.desktop --output-document=$HOME/.local/share/applications/ncdu.desktop &> /dev/null
+   wget https://raw.githubusercontent.com/BardiaMGTGC/WayNotif/main/ncdu.png --output-document=$HOME/.local/share/icons/ncdu.png &> /dev/null
    echo "ncdu installed successfully."
 fi
 
@@ -262,8 +262,8 @@ if [ "$LIBERTINE" == "true" ]; then
       mkdir -p $HOME/.local/bin
    fi
 
-   wget https://bardia.tech/libertine.desktop --output-document=$HOME/.local/share/applications/libertine.desktop &> /dev/null
-   wget https://bardia.tech/lish --output-document=$HOME/.local/bin/lish &> /dev/null
+   wget https://raw.githubusercontent.com/BardiaMGTGC/WayNotif/main/libertine.desktop --output-document=$HOME/.local/share/applications/libertine.desktop &> /dev/null
+   wget https://raw.githubusercontent.com/BardiaMGTGC/WayNotif/main/lish --output-document=$HOME/.local/bin/lish &> /dev/null
    chmod +x $HOME/.local/bin/lish
    echo "Libertine shell icon installed successfully."
 fi
