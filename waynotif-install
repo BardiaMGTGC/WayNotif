@@ -277,15 +277,17 @@ else
    echo "Adding needed entries to sudoers."
    # Save username of current user to a file so that it can be used later.
    whoami > /tmp/whoami
+   WAYDROID=$(which waydroid)
+   MOUNT=$(which mount)
    if [ "$USER" == "phablet" ]; then
       sudo mount -o remount,rw /
-      sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/usr/bin/waydroid" >> /etc/sudoers'
-      sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/bin/mount" >> /etc/sudoers'
+      sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:$WAYDROID" >> /etc/sudoers'
+      sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:$MOUNT" >> /etc/sudoers'
       sudo mount -o remount,ro /
       rm -f /tmp/whoami
       echo "Waydroid and mount have been added to sudoers."
    else
-      sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:/usr/bin/waydroid" >> /etc/sudoers'
+      sudo su -c 'export WHOAMI=$(cat /tmp/whoami) && echo "$WHOAMI ALL=(ALL) NOPASSWD:$WAYDROID" >> /etc/sudoers'
       rm -f /tmp/whoami
       echo "Waydroid has been added to sudoers."
    fi
