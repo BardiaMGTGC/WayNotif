@@ -200,34 +200,7 @@ if [ "$HTOP" == "true" ]; then
    wget https://raw.githubusercontent.com/BardiaMGTGC/WayNotif/main/htop.desktop --output-document=$HOME/.local/share/applications/htop.desktop &> /dev/null
    wget https://raw.githubusercontent.com/BardiaMGTGC/WayNotif/main/htop.png --output-document=$HOME/.local/share/icons/htop.png &> /dev/null
    echo "htop installed successfully."
-fi
-
-# bashtop installation.
-if [ "$BASHTOP" == "true" ]; then
-   echo "Installing bashtop..."
-
-   if [ ! -d $HOME/.cache ]; then
-      mkdir -p $HOME/.cache
-   fi
-
-   if [ ! -d $HOME/.local/share/icons ]; then
-      mkdir -p $HOME/.local/share/icons
-   fi
-
-   wget https://github.com/tuxecure/crackle/releases/latest/download/crackle.zip --output-document=$HOME/.cache/crackle.zip &> /dev/null
-   unzip $HOME/.cache/crackle.zip -d $HOME/.cache/crackle &> /dev/null
-   cd $HOME/.cache
-   crackle/crackle setup &> /dev/null
-   source $HOME/.bashrc
-   rm -rf $HOME/.cache/crackle
-   crackle install bash bashtop &> /dev/null
-   wget https://raw.githubusercontent.com/BardiaMGTGC/WayNotif/main/bashtop.desktop --output-document=$HOME/.local/share/applications/bashtop.desktop &> /dev/null
-   wget https://raw.githubusercontent.com/BardiaMGTGC/WayNotif/main/bashtop.png --output-document=$HOME/.local/share/icons/bashtop.png &> /dev/null
-   if cat $(which bashtop) | grep "#!/bin/bash"; then
-      awk '{gsub("#!/bin/bash, "#!/home/phablet/.local/bin/bash");print}' $(which bashtop) > $HOME/.cache/bashtop
-      mv $HOME/.cache/bashtop $(which bashtop)
-   fi
-   echo "bashtop installed successfully."
+   CRACKLE=1
 fi
 
 # ncdu installation.
@@ -241,13 +214,17 @@ if [ "$NCDU" == "true" ]; then
    if [ ! -d $HOME/.local/share/icons ]; then
       mkdir -p $HOME/.local/share/icons
    fi
-
-   https://github.com/tuxecure/crackle/releases/latest/download/crackle.zip --output-document=$HOME/.cache/crackle.zip &> /dev/null
-   unzip $HOME/.cache/crackle.zip -d $HOME/.cache/crackle &> /dev/null
-   cd $HOME/.cache
-   crackle/crackle setup &> /dev/null
-   source $HOME/.bashrc
-   rm -rf $HOME/.cache/crackle
+   if [ $CRACKLE == 1 ]; then
+      true;
+   else
+      https://github.com/tuxecure/crackle/releases/latest/download/crackle.zip --output-document=$HOME/.cache/crackle.zip &> /dev/null
+      unzip $HOME/.cache/crackle.zip -d $HOME/.cache/crackle &> /dev/null
+      cd $HOME/.cache
+      crackle/crackle setup &> /dev/null
+      source $HOME/.bashrc
+      rm -rf $HOME/.cache/crackle
+      CRACKLE=1
+   fi
    crackle install ncdu &> /dev/null
    wget https://raw.githubusercontent.com/BardiaMGTGC/WayNotif/main/ncdu.desktop --output-document=$HOME/.local/share/applications/ncdu.desktop &> /dev/null
    wget https://raw.githubusercontent.com/BardiaMGTGC/WayNotif/main/ncdu.png --output-document=$HOME/.local/share/icons/ncdu.png &> /dev/null
