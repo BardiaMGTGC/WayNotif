@@ -153,13 +153,24 @@ if [ "$WAYNOTIF" == "true" ] || [ "$SUSPEND" == "true" ] || [ "$UNSUSPEND" == "t
    fi
 fi
 
+if [ -z "$XDG_CACHE_HOME" ]; then
+   CACHE=$HOME/.cache
+else
+   CACHE=$XDG_CACHE_HOME
+fi
+
 # WayNotif installation.
 if [ "$WAYNOTIF" == "true" ]; then
    echo "Installing WayNotif..."
-   curl https://raw.githubusercontent.com/BardiaMGTGC/WayNotif/main/waynotif --output $HOME/waynotif &> /dev/null
+   if [ -d $HOME/.local/bin ]; then
+      true
+   else
+      mkdir -p $HOME/.local/bin
+   fi
+   curl https://raw.githubusercontent.com/BardiaMGTGC/WayNotif/main/waynotif --output $HOME/.local/bin/waynotif &> /dev/null
    chmod +x $HOME/waynotif
-   if [ -d $HOME/.cache/waynotif ]; then
-      rm -rf $HOME/.cache/waynotif/notifications*
+   if [ -d $CACHE/waynotif ]; then
+      rm -rf $CACHE/waynotif/notifications*
    fi
    echo "WayNotif installed successfully."
 fi
@@ -182,20 +193,20 @@ fi
 if [ "$HTOP" == "true" ]; then
    echo "Installing htop..."
 
-   if [ ! -d $HOME/.cache ]; then
-      mkdir -p $HOME/.cache
+   if [ ! -d $CACHE ]; then
+      mkdir -p $CACHE
    fi
 
    if [ ! -d $HOME/.local/share/icons ]; then
       mkdir -p $HOME/.local/share/icons
    fi
 
-   wget https://github.com/tuxecure/crackle/releases/latest/download/crackle.zip --output-document=$HOME/.cache/crackle.zip &> /dev/null
-   unzip $HOME/.cache/crackle.zip -d $HOME/.cache/crackle &> /dev/null
-   cd $HOME/.cache
+   wget https://github.com/tuxecure/crackle/releases/latest/download/crackle.zip --output-document=$CACHE/crackle.zip &> /dev/null
+   unzip $CACHE/crackle.zip -d $CACHE/crackle &> /dev/null
+   cd $CACHE
    crackle/crackle setup &> /dev/null
    source $HOME/.bashrc
-   rm -rf $HOME/.cache/crackle
+   rm -rf $CACHE/crackle
    crackle install htop &> /dev/null
    wget https://raw.githubusercontent.com/BardiaMGTGC/WayNotif/main/htop.desktop --output-document=$HOME/.local/share/applications/htop.desktop &> /dev/null
    wget https://raw.githubusercontent.com/BardiaMGTGC/WayNotif/main/htop.png --output-document=$HOME/.local/share/icons/htop.png &> /dev/null
@@ -207,8 +218,8 @@ fi
 if [ "$NCDU" == "true" ]; then
    echo "Installing ncdu..."
 
-   if [ ! -d $HOME/.cache ]; then
-      mkdir -p $HOME/.cache
+   if [ ! -d $CACHE ]; then
+      mkdir -p $CACHE
    fi
 
    if [ ! -d $HOME/.local/share/icons ]; then
@@ -217,12 +228,12 @@ if [ "$NCDU" == "true" ]; then
    if [ $CRACKLE == 1 ]; then
       true;
    else
-      https://github.com/tuxecure/crackle/releases/latest/download/crackle.zip --output-document=$HOME/.cache/crackle.zip &> /dev/null
-      unzip $HOME/.cache/crackle.zip -d $HOME/.cache/crackle &> /dev/null
-      cd $HOME/.cache
+      https://github.com/tuxecure/crackle/releases/latest/download/crackle.zip --output-document=$CACHE/crackle.zip &> /dev/null
+      unzip $CACHE/crackle.zip -d $CACHE/crackle &> /dev/null
+      cd $CACHE
       crackle/crackle setup &> /dev/null
       source $HOME/.bashrc
-      rm -rf $HOME/.cache/crackle
+      rm -rf $CACHE/crackle
       CRACKLE=1
    fi
    crackle install ncdu &> /dev/null
